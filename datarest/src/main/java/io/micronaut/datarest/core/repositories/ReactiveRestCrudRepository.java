@@ -18,6 +18,7 @@ package io.micronaut.datarest.core.repositories;
 import io.micronaut.core.async.annotation.SingleResult;
 import io.micronaut.data.model.Page;
 import io.micronaut.data.model.Pageable;
+import io.micronaut.data.model.Sort;
 import org.reactivestreams.Publisher;
 
 /**
@@ -60,6 +61,20 @@ public interface ReactiveRestCrudRepository {
      * @return a page of rows
      */
     <T> @SingleResult Publisher<Page<T>> findAll(String table, Pageable pageable, Class<T> type);
+
+    /**
+     * Lists every row of a table in the given order. Equivalent to {@code findAll(table, Pageable.from(sort), type)}.
+     *
+     * @param table table name
+     * @param sort  sort order
+     * @param type  type to deserialize each row into
+     * @param <T>   row type
+     * @return a page holding every row
+     */
+    @SingleResult
+    default <T> Publisher<Page<T>> findAll(String table, Sort sort, Class<T> type) {
+        return findAll(table, Pageable.from(sort), type);
+    }
 
     /**
      * Finds the row whose identifier column matches the given value.

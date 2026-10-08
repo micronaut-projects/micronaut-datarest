@@ -4,6 +4,8 @@ quickStart:
   title: Quick Start
 repositories:
   title: Repositories
+ords:
+  title: Oracle with ORDS
 postgresql:
   title: PostgreSQL with PostgREST
 repository: Repository

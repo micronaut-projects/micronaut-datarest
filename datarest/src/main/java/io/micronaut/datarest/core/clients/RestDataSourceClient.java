@@ -22,6 +22,8 @@ import io.micronaut.http.client.HttpClient;
 import io.micronaut.http.client.HttpClientConfiguration;
 import io.micronaut.inject.qualifiers.Qualifiers;
 
+import java.net.URL;
+
 /**
  * HTTP client bound to a {@link RestDataSourceConfiguration}.
  * A bean is created for every configured REST data source.
@@ -33,6 +35,7 @@ import io.micronaut.inject.qualifiers.Qualifiers;
 public final class RestDataSourceClient implements AutoCloseable {
     private static final String HTTP_CLIENT_ID_PREFIX = "restdatasource";
     private final HttpClient httpClient;
+    private final URL url;
 
     /**
      * @param restDataSourceConfiguration configuration of the REST data source
@@ -42,6 +45,7 @@ public final class RestDataSourceClient implements AutoCloseable {
     public RestDataSourceClient(RestDataSourceConfiguration restDataSourceConfiguration, BeanContext beanContext) {
         HttpClientConfiguration httpClientConfiguration = beanContext.findBean(HttpClientConfiguration.class,
             Qualifiers.byName(HTTP_CLIENT_ID_PREFIX + restDataSourceConfiguration.getName())).orElse(null);
+        this.url = restDataSourceConfiguration.getUrl();
         this.httpClient = httpClientConfiguration != null
             ? HttpClient.create(restDataSourceConfiguration.getUrl(), httpClientConfiguration)
             : HttpClient.create(restDataSourceConfiguration.getUrl());
@@ -52,6 +56,13 @@ public final class RestDataSourceClient implements AutoCloseable {
      */
     public HttpClient getHttpClient() {
         return httpClient;
+    }
+
+    /**
+     * @return the base URL of the REST data source
+     */
+    public URL getUrl() {
+        return url;
     }
 
     @Override

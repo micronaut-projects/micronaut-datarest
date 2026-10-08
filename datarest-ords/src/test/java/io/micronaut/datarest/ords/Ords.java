@@ -74,9 +74,9 @@ public class Ords {
           ords.enable_object(
             p_enabled        => true,
             p_schema         => 'DEMO',
-            p_object         => 'BOOK',
+            p_object         => 'BOOKS',
             p_object_type    => 'TABLE',
-            p_object_alias   => 'book',
+            p_object_alias   => 'books',
             p_auto_rest_auth => false);
           commit;
         end;""");
@@ -90,9 +90,9 @@ public class Ords {
             ORDS.start();
             executeSQL();
             try {
-                url = new URI("http", null, ORDS.getHost(), ORDS.getMappedPort(ORDS_PORT), null, null, null).toString();
+                url = new URI("http", null, ORDS.getHost(), ORDS.getMappedPort(ORDS_PORT), "/ords/" + SCHEMA, null, null).toString();
             } catch (URISyntaxException e) {
-                throw new IllegalStateException("Could not create the PostegreSQL REST URL", e);
+                throw new IllegalStateException("Could not create the ORDS URL", e);
             }
         }
         return Map.of("restdatasources." + nameQualifier + ".url", url);

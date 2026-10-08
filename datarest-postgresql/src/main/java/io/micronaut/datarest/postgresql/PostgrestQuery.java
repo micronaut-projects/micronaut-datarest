@@ -15,12 +15,14 @@
  */
 package io.micronaut.datarest.postgresql;
 
+import io.micronaut.data.model.Sort;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Query parameters accepted by a PostgREST table endpoint.
@@ -37,6 +39,10 @@ public record PostgrestQuery(@NonNull Map<String, String> filters,
                              @Nullable Integer limit,
                              @Nullable Integer offset,
                              @Nullable String select) {
+
+    private static final String ASC = ".asc";
+    private static final String DESC = ".desc";
+    private static final String COMMA = ",";
 
     public PostgrestQuery {
         filters = Collections.unmodifiableMap(new LinkedHashMap<>(filters));
@@ -57,6 +63,15 @@ public record PostgrestQuery(@NonNull Map<String, String> filters,
         return none().withOrder(order);
     }
 
+    /**
+     * @param sort a Micronaut Data sort
+     * @return a query ordering rows by the given sort
+     */
+    @NonNull
+    public static PostgrestQuery order(@NonNull Sort sort) {
+        return none().withOrder(sort);
+    }
+
     @NonNull
     public static PostgrestQuery page(int limit, int offset) {
         return none().withPage(limit, offset);
@@ -74,6 +89,17 @@ public record PostgrestQuery(@NonNull Map<String, String> filters,
         return new PostgrestQuery(filters, order, limit, offset, select);
     }
 
+    /**
+     * Orders rows by a Micronaut Data sort, rendered as {@code column.asc,other.desc}.
+     *
+     * @param sort a Micronaut Data sort; an unsorted one clears the ordering
+     * @return a copy of this query with the given ordering
+     */
+    @NonNull
+    public PostgrestQuery withOrder(@NonNull Sort sort) {
+        return withOrder(sort.isSorted() ? toOrder(sort) : null);
+    }
+
     @NonNull
     public PostgrestQuery withPage(int limit, int offset) {
         return new PostgrestQuery(filters, order, limit, offset, select);
@@ -82,5 +108,11 @@ public record PostgrestQuery(@NonNull Map<String, String> filters,
     @NonNull
     public PostgrestQuery withSelect(@Nullable String select) {
         return new PostgrestQuery(filters, order, limit, offset, select);
+    }
+
+    private static String toOrder(Sort sort) {
+        return sort.getOrderBy().stream()
+            .map(order -> order.getProperty() + (order.isAscending() ? ASC : DESC))
+            .collect(Collectors.joining(COMMA));
     }
 }

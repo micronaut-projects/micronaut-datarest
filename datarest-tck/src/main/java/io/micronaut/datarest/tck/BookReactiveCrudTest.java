@@ -74,6 +74,11 @@ class BookReactiveCrudTest implements TestPropertyProvider {
         assertNull(assertDoesNotThrow(() -> Mono.from(repository.update(table, idColumn, -1L, Map.of("title", newTitle), Book.class)).block()));
 
         Book second = assertDoesNotThrow(() -> Mono.from(repository.save(table, new BookSave("Dune", "Frank Herbert", null), Book.class)).block());
+        Page<Book> sorted = assertDoesNotThrow(() -> Mono.from(repository.findAll(table, Sort.of(Sort.Order.desc(idColumn)), Book.class)).block());
+        assertEquals(2, sorted.getNumberOfElements());
+        assertEquals(2, sorted.getTotalSize());
+        assertEquals(second.id(), sorted.getContent().get(0).id());
+        assertEquals(book.id(), sorted.getContent().get(1).id());
         Pageable firstPage = Pageable.from(0, 1, Sort.of(Sort.Order.desc(idColumn)));
         Page<Book> page = assertDoesNotThrow(() -> Mono.from(repository.findAll(table, firstPage, Book.class)).block());
         assertEquals(1, page.getNumberOfElements());

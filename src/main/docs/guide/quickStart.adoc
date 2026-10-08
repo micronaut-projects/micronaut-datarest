@@ -1,20 +1,27 @@
-To use Micronaut Data REST with PostgreSQL, add the following dependency to your build:
+Add the module for your database gateway to your build. For Oracle Database behind https://docs.oracle.com/en/database/oracle/oracle-rest-data-services/[Oracle REST Data Services (ORDS)]:
+
+dependency:micronaut-datarest-ords[groupId="io.micronaut.datarest"]
+
+For PostgreSQL behind https://docs.postgrest.org/en/v16/[PostgREST]:
 
 dependency:micronaut-datarest-postgresql[groupId="io.micronaut.datarest"]
 
-Then configure one or more REST data sources. Each entry under `restdatasources` creates a named data source whose `url` is the base URL of the HTTP API:
+Then configure one or more REST data sources. Each entry under `restdatasources` creates a named data source whose `url` is the base URL of the HTTP API. The shape of the URL depends on the gateway:
 
 [configuration]
 ----
 restdatasources:
   default:
-    url: http://localhost:3000
+    url: http://localhost:8080/ords/hr   # ORDS: the REST enabled schema alias
+  postgres:
+    url: http://localhost:3000           # PostgREST: the server root
 ----
 
 For every data source, Micronaut creates:
 
 * an api:datarest.core.clients.RestDataSourceClient[] bean holding an HTTP client pointing at the base URL,
 * an api:datarest.core.repositories.RestCrudRepository[] bean,
+* an api:datarest.core.repositories.ReactiveRestCrudRepository[] bean,
 * an api:datarest.core.repositories.ReactorRestCrudRepository[] bean.
 
 Inject a repository and name the table you want to work with:
@@ -39,6 +46,6 @@ class BookService {
 }
 ----
 
-When more than one data source is configured, qualify the injection point with the data source name, for example `@Named("default")`.
+When more than one data source is configured, qualify the injection point with the data source name, for example `@Named("postgres")`.
 
 To tune the underlying HTTP client of a data source, declare a https://docs.micronaut.io/latest/guide/#serviceDiscovery[service client configuration] named `restdatasource` followed by the data source name, for example `micronaut.http.services.restdatasourcedefault.read-timeout`.

@@ -1,6 +1,19 @@
-Micronaut Data REST lets a Micronaut application perform CRUD operations against a database that is exposed through an HTTP API, rather than through a JDBC or R2DBC driver.
+Micronaut Data REST lets a Micronaut application perform CRUD operations against a database that is exposed through an HTTP API, rather than through a JDBC or R2DBC driver. The application talks to the database's REST gateway; the gateway talks to the database.
 
-The project is split into two modules:
+The project is split into a core module and one module per supported gateway:
 
-* `micronaut-datarest` defines the REST data source configuration and the repository contracts: api:datarest.core.repositories.RestCrudRepository[] for blocking calls and api:datarest.core.repositories.ReactorRestCrudRepository[] for https://projectreactor.io[Project Reactor] calls.
-* `micronaut-datarest-postgresql` implements those contracts for PostgreSQL tables exposed through https://docs.postgrest.org/en/v16/[PostgREST v16].
+[cols="1,3"]
+|===
+|Module |Purpose
+
+|`micronaut-datarest`
+|Defines the REST data source configuration and the three repository contracts: api:datarest.core.repositories.RestCrudRepository[] for blocking calls, api:datarest.core.repositories.ReactiveRestCrudRepository[] for Reactive Streams `Publisher` calls, and api:datarest.core.repositories.ReactorRestCrudRepository[] for https://projectreactor.io[Project Reactor] `Mono` calls.
+
+|`micronaut-datarest-ords`
+|Implements the contracts for Oracle Database tables exposed through https://docs.oracle.com/en/database/oracle/oracle-rest-data-services/[Oracle REST Data Services (ORDS)] AutoREST. See <<ords>>.
+
+|`micronaut-datarest-postgresql`
+|Implements the contracts for PostgreSQL tables exposed through https://docs.postgrest.org/en/v16/[PostgREST v16]. See <<postgresql>>.
+|===
+
+Both gateway modules pass the Micronaut Data REST technology compatibility kit, so an application written against the core contracts behaves the same way on either gateway, within the limits documented in each module's section.

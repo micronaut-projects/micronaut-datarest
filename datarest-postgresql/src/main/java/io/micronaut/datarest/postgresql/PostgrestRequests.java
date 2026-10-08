@@ -17,13 +17,11 @@ package io.micronaut.datarest.postgresql;
 
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.data.model.Pageable;
-import io.micronaut.data.model.Sort;
 import io.micronaut.http.HttpRequest;
 import io.micronaut.http.MutableHttpRequest;
 import io.micronaut.http.uri.UriBuilder;
 import org.jspecify.annotations.Nullable;
 
-import java.util.stream.Collectors;
 
 /**
  * Builds the HTTP requests of a <a href="https://postgrest.org">PostgREST</a> API.
@@ -55,9 +53,6 @@ public final class PostgrestRequests {
     private static final String RETURN_REPRESENTATION = "return=representation";
     private static final String COUNT_EXACT = "count=exact";
     private static final String EQ = "eq.";
-    private static final String ASC = ".asc";
-    private static final String DESC = ".desc";
-    private static final String COMMA = ",";
 
     private PostgrestRequests() {
     }
@@ -182,19 +177,13 @@ public final class PostgrestRequests {
             query = query.withPage(pageable.getSize(), (int) pageable.getOffset());
         }
         if (pageable.isSorted()) {
-            query = query.withOrder(pageable.getSort().getOrderBy().stream()
-                .map(PostgrestRequests::toOrder)
-                .collect(Collectors.joining(COMMA)));
+            query = query.withOrder(pageable.getSort());
         }
         return query;
     }
 
     private static PostgrestQuery byId(String idColumn, Object id) {
         return PostgrestQuery.filter(idColumn, EQ + id);
-    }
-
-    private static String toOrder(Sort.Order order) {
-        return order.getProperty() + (order.isAscending() ? ASC : DESC);
     }
 
     private static UriBuilder tableUri(String table, @Nullable PostgrestQuery query) {
