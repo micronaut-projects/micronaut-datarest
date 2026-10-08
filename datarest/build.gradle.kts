@@ -7,5 +7,10 @@ dependencies {
     api(mnData.micronaut.data.model)
     compileOnly(mnReactor.micronaut.reactor)
     testImplementation(mn.micronaut.http.client)
+    testImplementation(projects.micronautDatarestTck)
+    testImplementation(projects.testSuiteUtils)
+    testImplementation(platform(mnTest.boms.testcontainers))
+    testImplementation(libs.testcontainers.oracle.free)
+    testRuntimeOnly(mnSql.ojdbc17)
     testRuntimeOnly(mnSerde.micronaut.serde.jackson)
 }

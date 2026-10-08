@@ -1,8 +1,4 @@
-The `micronaut-datarest-ords` module consumes the AutoREST API of https://docs.oracle.com/en/database/oracle/oracle-rest-data-services/[Oracle REST Data Services (ORDS)]. ORDS exposes an Oracle Database schema over HTTP; once a table is REST enabled, it becomes a collection at `/ords/{schema-alias}/{table-alias}/` and each row a resource under it.
-
-== Dependency
-
-dependency:micronaut-datarest-ords[groupId="io.micronaut.datarest"]
+With the `ORDS` dialect, a REST data source consumes the AutoREST API of https://docs.oracle.com/en/database/oracle/oracle-rest-data-services/[Oracle REST Data Services (ORDS)]. ORDS exposes an Oracle Database schema over HTTP; once a table is REST enabled, it becomes a collection at `/ords/{schema-alias}/{table-alias}/` and each row a resource under it.
 
 == Configuration
 
@@ -26,13 +22,13 @@ For every data source the module creates one implementation of each contract:
 |Contract |ORDS implementation
 
 |api:datarest.core.repositories.RestGenericRepository[]
-|api:datarest.ords.OrdsRestGenericRepository[]
+|api:datarest.core.repositories.ords.OrdsRestGenericRepository[]
 
 |api:datarest.core.repositories.ReactiveRestGenericRepository[]
-|api:datarest.ords.OrdsReactiveRestGenericRepository[]
+|api:datarest.core.repositories.ords.OrdsReactiveRestGenericRepository[]
 
 |api:datarest.core.repositories.ReactorRestGenericRepository[]
-|api:datarest.ords.OrdsReactorRestGenericRepository[]
+|api:datarest.core.repositories.ords.OrdsReactorRestGenericRepository[]
 |===
 
 == How operations map to AutoREST

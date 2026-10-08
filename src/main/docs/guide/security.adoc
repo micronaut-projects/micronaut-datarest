@@ -13,19 +13,13 @@ api:datarest.core.clients.RestDataSourceClient[] exposes the service id through 
 
 A client filter targeting the service id is the simplest way to add credentials. It works for a PostgREST JWT, ORDS HTTP basic credentials, or any API key:
 
-[source,java]
-----
-@ClientFilter(serviceId = "restdatasource-default")
-class DataSourceAuthenticationFilter {
+snippet::io.micronaut.datarest.docs.BearerTokenFilter[tags="class", indent=0]
 
-    @RequestFilter
-    void authenticate(MutableHttpRequest<?> request) {
-        request.bearerAuth(token); // or request.basicAuth(user, password)
-    }
-}
-----
+<1> The filter applies to every request of the `default` data source and to nothing else.
+<2> The token comes from configuration here. Any source works, including a client that fetches it.
+<3> `bearerAuth` sets the `Authorization` header. Use `basicAuth(user, password)` for ORDS basic credentials.
 
-The technology compatibility kit of this project uses exactly this: its PostgREST fixture only grants privileges to the role named in a JWT, and a test scoped filter signs that JWT and attaches it.
+The test suites of this project use exactly this filter: their PostgREST container only grants privileges to the role named in a JWT, and the tests provide that JWT as the `books.token` property.
 
 == Propagating the caller's token
 

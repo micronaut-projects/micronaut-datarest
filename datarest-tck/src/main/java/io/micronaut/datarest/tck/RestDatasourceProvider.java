@@ -17,20 +17,55 @@ package io.micronaut.datarest.tck;
 
 import org.jspecify.annotations.Nullable;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
+import java.util.concurrent.atomic.AtomicReference;
 
+/**
+ * Supplies the configuration of the REST data source the TCK runs against. A suite selects a provider with
+ * {@link #select(RestDatasourceProvider)} before running the TCK; without a selection the single provider registered
+ * through {@link ServiceLoader} is used.
+ *
+ * @author Sergio del Amo
+ * @since 1.0.0
+ */
 public interface RestDatasourceProvider {
+
+    /**
+     * Holder of the provider selected by the running suite.
+     */
+    AtomicReference<@Nullable RestDatasourceProvider> SELECTED = new AtomicReference<>();
+
+    /**
+     * @return the {@code restdatasources.*} properties of the data source under test
+     */
     Map<String, String> getProperties();
 
-    @Nullable static RestDatasourceProvider getFirst() {
-        List<RestDatasourceProvider> services = new ArrayList<>();
-        ServiceLoader<RestDatasourceProvider> loader = ServiceLoader.load(RestDatasourceProvider.class);
-        loader.forEach(services::add);
-        if (services.isEmpty()) {
-            return null;
+    /**
+     * Selects the provider the TCK uses until the next selection.
+     *
+     * @param provider the provider, or {@code null} to fall back to {@link ServiceLoader}
+     */
+    static void select(@Nullable RestDatasourceProvider provider) {
+        SELECTED.set(provider);
+    }
+
+    /**
+     * @return the selected provider, otherwise the single registered one
+     * @throws IllegalStateException if no provider is selected and not exactly one is registered
+     */
+    static RestDatasourceProvider getFirst() {
+        RestDatasourceProvider selected = SELECTED.get();
+        if (selected != null) {
+            return selected;
+        }
+        List<RestDatasourceProvider> services = ServiceLoader.load(RestDatasourceProvider.class).stream()
+            .map(ServiceLoader.Provider::get)
+            .toList();
+        if (services.size() != 1) {
+            throw new IllegalStateException("Expected one registered " + RestDatasourceProvider.class.getSimpleName()
+                + " or a selected one, found " + services.size());
         }
         return services.getFirst();
     }

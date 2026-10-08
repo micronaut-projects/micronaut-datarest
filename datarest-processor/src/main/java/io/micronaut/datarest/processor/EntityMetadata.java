@@ -39,13 +39,14 @@ import java.util.function.Supplier;
  *
  * @param table        persisted table name
  * @param idColumn     persisted identity column name
+ * @param idProperty   name of the identity property
  * @param idReadMethod name of the entity method returning the identity, such as {@code id} or {@code getId}
  * @param idType       type of the identity property
  * @author Sergio del Amo
  * @since 1.0.0
  */
 @Internal
-record EntityMetadata(String table, String idColumn, String idReadMethod, ClassElement idType) {
+record EntityMetadata(String table, String idColumn, String idProperty, String idReadMethod, ClassElement idType) {
 
     private static final Map<String, Supplier<NamingStrategy>> BUILT_IN_STRATEGIES = Map.of(
         NamingStrategies.UnderScoreSeparatedLowerCase.class.getName(), NamingStrategies.UnderScoreSeparatedLowerCase::new,
@@ -77,7 +78,7 @@ record EntityMetadata(String table, String idColumn, String idReadMethod, ClassE
         String column = columnName(id.getName(), id.stringValue(MappedProperty.class).orElse(null), strategy);
         MethodElement readMethod = id.getReadMethod()
             .orElseThrow(() -> new ProcessingException(entity, "Identity property [" + id.getName() + "] of entity [" + entity.getName() + "] has no accessor"));
-        return new EntityMetadata(table, column, readMethod.getName(), id.getType());
+        return new EntityMetadata(table, column, id.getName(), readMethod.getName(), id.getType());
     }
 
     /**

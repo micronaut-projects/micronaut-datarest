@@ -17,7 +17,7 @@ package io.micronaut.datarest.core.repositories;
 
 import io.micronaut.core.annotation.Blocking;
 import io.micronaut.core.annotation.Experimental;
-import io.micronaut.core.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 import io.micronaut.data.model.Page;
 import io.micronaut.data.model.Pageable;
 import io.micronaut.data.model.Sort;

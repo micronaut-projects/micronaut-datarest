@@ -7,7 +7,7 @@
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=micronaut-projects_micronaut-template&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=micronaut-projects_micronaut-template)
 [![Revved up by Develocity](https://img.shields.io/badge/Revved%20up%20by-Develocity-06A0CE?logo=Gradle&labelColor=02303A)](https://ge.micronaut.io/scans)
 
-Micronaut Data REST performs CRUD operations against databases exposed through an HTTP API. The `micronaut-datarest-ords` module consumes the [Oracle REST Data Services (ORDS)](https://docs.oracle.com/en/database/oracle/oracle-rest-data-services/) AutoREST API and the `micronaut-datarest-postgresql` module consumes the [PostgREST v16](https://docs.postgrest.org/en/v16/) API.
+Micronaut Data REST performs CRUD operations against databases exposed through an HTTP API. It consumes the [Oracle REST Data Services (ORDS)](https://docs.oracle.com/en/database/oracle/oracle-rest-data-services/) AutoREST API and the [PostgREST v16](https://docs.postgrest.org/en/v16/) API.
 
 ## Documentation
 

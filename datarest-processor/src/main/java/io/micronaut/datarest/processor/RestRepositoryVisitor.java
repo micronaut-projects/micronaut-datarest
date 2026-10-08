@@ -104,8 +104,22 @@ public final class RestRepositoryVisitor implements TypeElementVisitor<RestRepos
                 + metadata.idType().getName() + "] but the repository declares ID as [" + idType.getName() + "]");
         }
         String dataSource = element.stringValue(RestRepository.class).orElse("default");
+        if (context.getLanguage() == VisitorContext.Language.GROOVY) {
+            // The Groovy compiler of Micronaut does not accept generated source files: nothing would be compiled.
+            throw new ProcessingException(element, "@RestRepository interfaces cannot be implemented in Groovy sources. "
+                + "Declare [" + element.getName() + "] in Java or Kotlin, or use the generic repositories");
+        }
+        if (context.getLanguage() == VisitorContext.Language.KOTLIN) {
+            // SourceGen's Kotlin writer declares type variables on classes only, so the generic save and update
+            // cannot be generated through it. A Kotlin template stands in until it does.
+            KotlinRepositorySource.write(element, entity, idType, metadata, dataSource, context);
+            return;
+        }
         ClassDef classDef = generate(element, entity, idType, metadata, dataSource);
-        SourceGenerator sourceGenerator = SourceGenerators.findByLanguage(context.getLanguage()).orElse(null);
+        // Python has no source generator of its own but compiles generated Java sources, so Java is the fallback.
+        SourceGenerator sourceGenerator = SourceGenerators.findByLanguage(context.getLanguage())
+            .or(() -> SourceGenerators.findByLanguage(VisitorContext.Language.JAVA))
+            .orElse(null);
         if (sourceGenerator == null) {
             return;
         }
