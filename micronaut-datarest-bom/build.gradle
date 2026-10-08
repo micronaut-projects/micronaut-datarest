@@ -1,0 +1,4 @@
+plugins {
+    id 'io.micronaut.build.internal.datarest-base'
+    id "io.micronaut.build.internal.bom"
+}
