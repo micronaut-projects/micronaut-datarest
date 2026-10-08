@@ -61,7 +61,7 @@ public final class OrdsReactiveRestCrudRepository implements ReactiveRestCrudRep
      */
     public OrdsReactiveRestCrudRepository(RestDataSourceClient restDataSourceClient, JsonMapper jsonMapper) {
         this.client = restDataSourceClient.getHttpClient();
-        this.requests = new OrdsRequests(restDataSourceClient.getUrl(), jsonMapper);
+        this.requests = new OrdsRequests(jsonMapper);
         this.responses = new OrdsResponses(jsonMapper);
     }
 

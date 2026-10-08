@@ -26,15 +26,14 @@ import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
 import java.net.URI;
-import java.net.URL;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
  * Builds the HTTP requests of an
  * <a href="https://docs.oracle.com/en/database/oracle/oracle-rest-data-services/">ORDS AutoREST</a> API.
- * Request URIs are absolute, built from the data source base URL, which typically ends with the
- * schema alias, for example {@code http://localhost:8080/ords/hr}.
+ * Request URIs are relative to the data source URL, which ends with the schema alias, for example
+ * {@code http://localhost:8080/ords/hr}; the data source's client prepends that path.
  *
  * @author Sergio del Amo
  * @since 1.0.0
@@ -57,16 +56,12 @@ public final class OrdsRequests {
     private static final String ORDER_BY = "$orderby";
     private static final String ASC = "ASC";
     private static final String DESC = "DESC";
-    private final String base;
     private final JsonMapper jsonMapper;
 
     /**
-     * @param url        base URL of the data source, ending with the ORDS schema alias
      * @param jsonMapper mapper used to render the {@code q} query document
      */
-    public OrdsRequests(URL url, JsonMapper jsonMapper) {
-        String value = url.toString();
-        this.base = value.endsWith(SLASH) ? value.substring(0, value.length() - 1) : value;
+    public OrdsRequests(JsonMapper jsonMapper) {
         this.jsonMapper = jsonMapper;
     }
 
@@ -147,12 +142,15 @@ public final class OrdsRequests {
         return HttpRequest.DELETE(row(table, id));
     }
 
-    private UriBuilder collection(String table) {
-        return UriBuilder.of(base + SLASH + table + SLASH);
+    /**
+     * {@code /table/}: AutoREST collections end with a slash, otherwise ORDS redirects.
+     */
+    private static UriBuilder collection(String table) {
+        return UriBuilder.of(SLASH).path(table).path(SLASH);
     }
 
-    private URI row(String table, Object id) {
-        return UriBuilder.of(base + SLASH + table + SLASH + id).build();
+    private static URI row(String table, Object id) {
+        return UriBuilder.of(SLASH).path(table).path(String.valueOf(id)).build();
     }
 
     /**

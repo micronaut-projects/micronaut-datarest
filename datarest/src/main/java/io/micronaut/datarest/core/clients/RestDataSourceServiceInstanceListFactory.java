@@ -22,13 +22,16 @@ import io.micronaut.core.annotation.Internal;
 import io.micronaut.datarest.core.conf.RestDataSourceConfiguration;
 import io.micronaut.discovery.ServiceInstanceList;
 import io.micronaut.discovery.StaticServiceInstanceList;
+import org.jspecify.annotations.Nullable;
 
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
 
 /**
  * Registers every REST data source as a Micronaut service, so the {@link io.micronaut.http.client.HttpClientRegistry}
- * can resolve the service id {@code restdatasource-<name>} to the configured URL.
+ * can resolve the service id {@code restdatasource-<name>} to the configured URL. The URL path, if any, is the
+ * client's context path.
  *
  * @author Sergio del Amo
  * @since 1.0.0
@@ -36,6 +39,7 @@ import java.util.List;
 @Internal
 @Factory
 final class RestDataSourceServiceInstanceListFactory {
+    private static final String SLASH = "/";
 
     /**
      * @param configuration a REST data source
@@ -44,10 +48,25 @@ final class RestDataSourceServiceInstanceListFactory {
     @EachBean(RestDataSourceConfiguration.class)
     ServiceInstanceList serviceInstanceList(RestDataSourceConfiguration configuration) {
         try {
+            URI uri = configuration.getUrl().toURI();
             return new StaticServiceInstanceList(RestDataSourceClient.serviceId(configuration.getName()),
-                List.of(configuration.getUrl().toURI()));
+                List.of(uri), contextPath(uri));
         } catch (URISyntaxException e) {
             throw new ConfigurationException("Invalid URL for REST data source '" + configuration.getName() + "'", e);
         }
+    }
+
+    /**
+     * The path of the data source URL becomes the client's context path, so a relative request such as
+     * {@code /books} is sent to {@code /prefix/books} when the gateway lives behind a path prefix.
+     *
+     * @return the path without a trailing slash, or {@code null} when the URL has no path
+     */
+    private static @Nullable String contextPath(URI uri) {
+        String path = uri.getPath();
+        if (path == null || path.isEmpty() || SLASH.equals(path)) {
+            return null;
+        }
+        return path.endsWith(SLASH) ? path.substring(0, path.length() - 1) : path;
     }
 }
