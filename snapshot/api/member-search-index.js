@@ -1,0 +1,1 @@
+memberSearchIndex = [{"p":"io.micronaut.datarest.info","c":"MicronautDatarestModuleInfo","l":"MicronautDatarestModuleInfo()","u":"%3Cinit%3E()","k":"3"}];updateSearchResults();
