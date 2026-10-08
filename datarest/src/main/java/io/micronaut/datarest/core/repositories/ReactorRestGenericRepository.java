@@ -15,6 +15,7 @@
  */
 package io.micronaut.datarest.core.repositories;
 
+import io.micronaut.core.annotation.Experimental;
 import io.micronaut.data.model.Page;
 import io.micronaut.data.model.Pageable;
 import io.micronaut.data.model.Sort;
@@ -26,6 +27,7 @@ import reactor.core.publisher.Mono;
  * @author Sergio del Amo
  * @since 1.0.0
  */
+@Experimental
 public interface ReactorRestGenericRepository {
 
     /**

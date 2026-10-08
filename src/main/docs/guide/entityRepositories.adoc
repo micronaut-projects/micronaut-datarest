@@ -1,0 +1,40 @@
+Besides the table-level contracts, you can declare a repository for one entity and let the `micronaut-datarest-processor` annotation processor implement it at compilation time, the way Micronaut Data implements its repositories.
+
+dependency:micronaut-datarest-processor[groupId="io.micronaut.datarest",scope="annotationProcessor"]
+
+Annotate an interface extending api:datarest.core.repositories.RestCrudRepository[] with ann:datarest.core.annotations.RestRepository[]:
+
+[source,java]
+----
+import io.micronaut.data.annotation.Id;
+import io.micronaut.data.annotation.MappedEntity;
+import io.micronaut.datarest.core.annotations.RestRepository;
+import io.micronaut.datarest.core.repositories.RestCrudRepository;
+import io.micronaut.serde.annotation.Serdeable;
+
+@Serdeable
+@MappedEntity("books")
+public record Book(@Id Long id, String title, String author) {
+}
+
+@RestRepository
+public interface BookRepository extends RestCrudRepository<Book, Long> {
+}
+----
+
+The processor generates a singleton bean implementing `BookRepository`. Each method delegates to the api:datarest.core.repositories.RestGenericRepository[] of the REST data source named by the annotation value, `default` unless you set `@RestRepository("other")`, so the same security filters and HTTP client configuration apply. The entity must be serializable by the application's `JsonMapper`, for example through `@Serdeable`.
+
+== Table and identity inference
+
+The table name and the identity column follow the rules of Micronaut Data JDBC:
+
+* A non-empty `@MappedEntity` value is the table name. Otherwise the naming strategy of the entity, `@MappedEntity(namingStrategy = ...)` and `NamingStrategies.UnderScoreSeparatedLowerCase` by default, is applied to the class name, so `BookAuthor` maps to `book_author`.
+* The identity is the single property annotated with `@Id`. A non-empty `@MappedProperty` value on it is the column name. Otherwise the naming strategy is applied to the property name.
+* The identity property type must be assignable to the repository's `ID` type argument. Compilation fails otherwise, as it does when the entity has no `@Id` property, or more than one.
+
+== Limitations
+
+* Only the methods declared by api:datarest.core.repositories.RestCrudRepository[] are implemented. Declaring another abstract method in the interface fails compilation.
+* Only the naming strategies of `io.micronaut.data.model.naming.NamingStrategies` are supported. A custom strategy cannot be evaluated at compilation time. Set the table name explicitly instead.
+* `@MappedEntity(schema = ...)` is ignored. With a REST gateway the schema is part of the data source URL.
+* `update` sends the whole entity. On ORDS the row is replaced after merging the current columns, as described in <<ords>>.

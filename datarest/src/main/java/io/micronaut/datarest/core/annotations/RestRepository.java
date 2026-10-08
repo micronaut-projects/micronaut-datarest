@@ -16,27 +16,35 @@
 package io.micronaut.datarest.core.annotations;
 
 import io.micronaut.context.annotation.AliasFor;
-import io.micronaut.data.annotation.Repository;
+
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+/**
+ * Marks an interface extending {@link io.micronaut.datarest.core.repositories.RestCrudRepository} for compile-time
+ * implementation. The {@code micronaut-datarest-processor} annotation processor generates a singleton bean that
+ * implements every method against the table mapped by the entity, through the
+ * {@link io.micronaut.datarest.core.repositories.RestGenericRepository} of the named REST data source.
+ *
+ * @author Sergio del Amo
+ * @since 1.0.0
+ */
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.ANNOTATION_TYPE, ElementType.TYPE})
+@Target(ElementType.TYPE)
 @Documented
-@Repository
 public @interface RestRepository {
+
     /**
-     * @return The datasource name.
+     * @return the name of the REST data source, as configured under {@code restdatasources.<name>}
      */
-    @AliasFor(annotation = Repository.class, member = "value")
     String value() default "default";
 
     /**
-     * @return The datasource name.
+     * @return the name of the REST data source, an alias for {@link #value()}
      */
-    @AliasFor(annotation = Repository.class, member = "value")
+    @AliasFor(member = "value")
     String dataSource() default "default";
 }

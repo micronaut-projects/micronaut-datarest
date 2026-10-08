@@ -19,7 +19,6 @@ import io.micronaut.core.annotation.NonNull;
 import io.micronaut.data.model.Page;
 import io.micronaut.data.model.Pageable;
 import io.micronaut.data.model.Sort;
-import io.micronaut.datarest.core.repositories.RestGenericRepository;
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
 import io.micronaut.test.support.TestPropertyProvider;
 import org.junit.jupiter.api.Test;
@@ -70,7 +69,7 @@ class BookRestCrudRepositoryTest implements TestPropertyProvider {
         assertNull(assertDoesNotThrow(() -> repository.findById(-1L)));
 
         String newTitle = "Harry Potter and the Chamber of Secrets";
-        Book updated = assertDoesNotThrow(() -> repository.update(new Book(book.id(), title, book.author(), book.published())));
+        Book updated = assertDoesNotThrow(() -> repository.update(new Book(book.id(), newTitle, book.author(), book.published())));
         assertNotNull(updated);
         assertEquals(newTitle, updated.title());
         assertEquals(author, updated.author());

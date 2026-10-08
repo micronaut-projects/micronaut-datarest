@@ -13,6 +13,7 @@ rootProject.name = 'micronaut-datarest-parent'
 
 include 'datarest-tck'
 include 'datarest'
+include 'datarest-processor'
 include 'datarest-postgresql'
 include 'datarest-ords'
 include 'datarest-bom'

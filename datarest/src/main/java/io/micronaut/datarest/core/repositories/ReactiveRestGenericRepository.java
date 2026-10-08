@@ -15,6 +15,7 @@
  */
 package io.micronaut.datarest.core.repositories;
 
+import io.micronaut.core.annotation.Experimental;
 import io.micronaut.core.async.annotation.SingleResult;
 import io.micronaut.data.model.Page;
 import io.micronaut.data.model.Pageable;
@@ -27,6 +28,7 @@ import org.reactivestreams.Publisher;
  * @author Sergio del Amo
  * @since 1.0.0
  */
+@Experimental
 public interface ReactiveRestGenericRepository {
 
     /**

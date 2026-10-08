@@ -9,6 +9,9 @@ The project is split into a core module and one module per supported gateway:
 |`micronaut-datarest`
 |Defines the REST data source configuration and the three repository contracts: api:datarest.core.repositories.RestGenericRepository[] for blocking calls, api:datarest.core.repositories.ReactiveRestGenericRepository[] for Reactive Streams `Publisher` calls, and api:datarest.core.repositories.ReactorRestGenericRepository[] for https://projectreactor.io[Project Reactor] `Mono` calls.
 
+|`micronaut-datarest-processor`
+|Annotation processor that implements interfaces annotated with ann:datarest.core.annotations.RestRepository[] at compilation time. See <<entityRepositories>>.
+
 |`micronaut-datarest-ords`
 |Implements the contracts for Oracle Database tables exposed through https://docs.oracle.com/en/database/oracle/oracle-rest-data-services/[Oracle REST Data Services (ORDS)] AutoREST. See <<ords>>.
 

@@ -16,40 +16,96 @@
 package io.micronaut.datarest.core.repositories;
 
 import io.micronaut.core.annotation.Blocking;
+import io.micronaut.core.annotation.Experimental;
 import io.micronaut.core.annotation.Nullable;
 import io.micronaut.data.model.Page;
 import io.micronaut.data.model.Pageable;
 import io.micronaut.data.model.Sort;
+
 import java.util.List;
 
 /**
+ * CRUD operations for an entity mapped to a table of a REST data source. Interfaces extending it and annotated with
+ * {@link io.micronaut.datarest.core.annotations.RestRepository} are implemented at compilation time.
  *
- * @param <E> – The entity type
- * @param <ID> – The ID type
+ * @param <E>  the entity type, annotated with {@link io.micronaut.data.annotation.MappedEntity}
+ * @param <ID> the identity type, the type of the entity property annotated with {@link io.micronaut.data.annotation.Id}
+ * @author Sergio del Amo
+ * @since 1.0.0
  */
+@Experimental
 @Blocking
 public interface RestCrudRepository<E, ID> {
+
+    /**
+     * Finds the entity with the given identity.
+     *
+     * @param id identity value
+     * @return the entity, or {@code null} if none matches
+     */
     @Nullable E findById(ID id);
 
+    /**
+     * Saves an entity and returns the persisted representation.
+     *
+     * @param entity entity to insert
+     * @param <S>    entity type
+     * @return the persisted entity
+     */
     <S extends E> S save(S entity);
 
-    <S extends E> S update(S entity);
+    /**
+     * Updates the row identified by the entity's identity and returns the updated representation.
+     *
+     * @param entity entity to update
+     * @param <S>    entity type
+     * @return the updated entity, or {@code null} if no row matches
+     */
+    <S extends E> @Nullable S update(S entity);
 
+    /**
+     * Finds every entity.
+     *
+     * @return the entities
+     */
     List<E> findAll();
 
+    /**
+     * Finds every entity in the given order.
+     *
+     * @param sort sort order
+     * @return the entities
+     */
     List<E> findAll(Sort sort);
 
+    /**
+     * Checks whether an entity with the given identity exists.
+     *
+     * @param id identity value
+     * @return {@code true} if it exists
+     */
     boolean existsById(ID id);
 
+    /**
+     * Counts the entities.
+     *
+     * @return the number of entities
+     */
     long count();
 
+    /**
+     * Deletes the entity with the given identity.
+     *
+     * @param id identity value
+     * @return the number of deleted rows
+     */
     int deleteById(ID id);
 
     /**
-     * Finds all records for the given pageable.
+     * Finds a page of entities.
      *
-     * @param pageable The pageable.
-     * @return The results
+     * @param pageable page request
+     * @return the page
      */
     Page<E> findAll(Pageable pageable);
 }

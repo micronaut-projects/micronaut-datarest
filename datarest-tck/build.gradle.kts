@@ -3,7 +3,9 @@ plugins {
 }
 
 dependencies {
+    annotationProcessor(mn.micronaut.inject.java)
     annotationProcessor(mnSerde.micronaut.serde.processor)
+    annotationProcessor(projects.micronautDatarestProcessor)
     api(projects.micronautDatarest)
     api(mnTest.micronaut.test.junit5)
     api(mnReactor.micronaut.reactor)

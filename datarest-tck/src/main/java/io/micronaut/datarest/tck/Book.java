@@ -15,6 +15,7 @@
  */
 package io.micronaut.datarest.tck;
 
+import io.micronaut.data.annotation.Id;
 import io.micronaut.data.annotation.MappedEntity;
 import io.micronaut.serde.annotation.Serdeable;
 
@@ -23,7 +24,7 @@ import java.time.LocalDate;
 @Serdeable
 @MappedEntity("books")
 public record Book(
-    Long id,
+    @Id Long id,
     String title,
     String author,
     LocalDate published

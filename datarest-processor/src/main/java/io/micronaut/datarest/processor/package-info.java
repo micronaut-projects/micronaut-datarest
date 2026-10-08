@@ -13,14 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.micronaut.datarest.tck;
-
-import io.micronaut.datarest.core.annotations.RestRepository;
-import io.micronaut.datarest.core.repositories.RestCrudRepository;
-
 /**
- * Entity repository implemented at compilation time against the {@code default} REST data source.
+ * Compile-time implementation of {@code @RestRepository} interfaces.
+ *
+ * @author Sergio del Amo
+ * @since 1.0.0
  */
-@RestRepository
-public interface BookRestCrudRepository extends RestCrudRepository<Book, Long> {
-}
+@NullMarked
+package io.micronaut.datarest.processor;
+
+import org.jspecify.annotations.NullMarked;
