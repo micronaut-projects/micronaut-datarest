@@ -6,16 +6,17 @@ pluginManagement {
 }
 
 plugins {
-    id 'io.micronaut.build.shared.settings' version '8.0.1'
+    id 'io.micronaut.build.shared.settings' version '8.1.4'
 }
 
-rootProject.name = 'project-template-parent'
+rootProject.name = 'micronaut-datarest-parent'
 
-include 'project-template'
-include 'project-template-bom'
+include 'datarest'
+include 'datarest-bom'
 
 enableFeaturePreview 'TYPESAFE_PROJECT_ACCESSORS'
 
 micronautBuild {
+    useStandardizedProjectNames = true
     importMicronautCatalog()
 }
