@@ -32,7 +32,7 @@ import org.jspecify.annotations.Nullable;
  * @since 1.0.0
  */
 @EachBean(RestDataSourceClient.class)
-public final class PostgreSQLRestCrudRepository implements AutoCloseable, RestCrudRepository {
+public final class PostgreSQLRestCrudRepository implements RestCrudRepository {
     private final BlockingHttpClient client;
 
     /**
@@ -116,10 +116,5 @@ public final class PostgreSQLRestCrudRepository implements AutoCloseable, RestCr
      */
     public int deleteAll(String table, PostgrestQuery query) {
         return client.retrieve(PostgrestRequests.deleteAll(table, query), PostgrestResponses.ROWS).size();
-    }
-
-    @Override
-    public void close() throws Exception {
-        client.close();
     }
 }

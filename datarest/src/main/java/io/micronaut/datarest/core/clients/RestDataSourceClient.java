@@ -18,8 +18,11 @@ package io.micronaut.datarest.core.clients;
 import io.micronaut.context.BeanContext;
 import io.micronaut.context.annotation.EachBean;
 import io.micronaut.datarest.core.conf.RestDataSourceConfiguration;
+import io.micronaut.http.HttpVersion;
 import io.micronaut.http.client.HttpClient;
 import io.micronaut.http.client.HttpClientConfiguration;
+import io.micronaut.http.client.HttpClientRegistry;
+import io.micronaut.http.client.HttpVersionSelection;
 import io.micronaut.inject.qualifiers.Qualifiers;
 
 import java.net.URL;
@@ -28,27 +31,47 @@ import java.net.URL;
  * HTTP client bound to a {@link RestDataSourceConfiguration}.
  * A bean is created for every configured REST data source.
  *
+ * <p>The client is obtained from the {@link HttpClientRegistry} under the service id
+ * {@code restdatasource-<name>}, so it behaves like a client injected with {@code @Client("restdatasource-<name>")}:
+ * {@code micronaut.http.services.restdatasource-<name>.*} configures it, and client filters declared for that
+ * service id, such as the ones Micronaut Security provides to propagate or obtain tokens, apply to every request.</p>
+ *
  * @author Sergio del Amo
  * @since 1.0.0
  */
 @EachBean(RestDataSourceConfiguration.class)
-public final class RestDataSourceClient implements AutoCloseable {
-    private static final String HTTP_CLIENT_ID_PREFIX = "restdatasource";
+public final class RestDataSourceClient {
+    /**
+     * Prefix of the service id under which the client of a data source is registered.
+     */
+    public static final String SERVICE_ID_PREFIX = "restdatasource-";
     private final HttpClient httpClient;
     private final URL url;
+    private final String serviceId;
 
     /**
      * @param restDataSourceConfiguration configuration of the REST data source
-     * @param beanContext                 bean context used to look up an optional {@link HttpClientConfiguration}
-     *                                    named {@code restdatasource<name>}
+     * @param registry                    registry the client is obtained from
+     * @param beanContext                 bean context used to look up the optional
+     *                                    {@link HttpClientConfiguration} of the service id
      */
-    public RestDataSourceClient(RestDataSourceConfiguration restDataSourceConfiguration, BeanContext beanContext) {
-        HttpClientConfiguration httpClientConfiguration = beanContext.findBean(HttpClientConfiguration.class,
-            Qualifiers.byName(HTTP_CLIENT_ID_PREFIX + restDataSourceConfiguration.getName())).orElse(null);
+    public RestDataSourceClient(RestDataSourceConfiguration restDataSourceConfiguration,
+                                HttpClientRegistry<?> registry,
+                                BeanContext beanContext) {
         this.url = restDataSourceConfiguration.getUrl();
-        this.httpClient = httpClientConfiguration != null
-            ? HttpClient.create(restDataSourceConfiguration.getUrl(), httpClientConfiguration)
-            : HttpClient.create(restDataSourceConfiguration.getUrl());
+        this.serviceId = serviceId(restDataSourceConfiguration.getName());
+        HttpVersionSelection version = beanContext.findBean(HttpClientConfiguration.class, Qualifiers.byName(serviceId))
+            .map(HttpVersionSelection::forClientConfiguration)
+            .orElseGet(() -> HttpVersionSelection.forLegacyVersion(HttpVersion.HTTP_1_1));
+        this.httpClient = registry.getClient(version, serviceId, null);
+    }
+
+    /**
+     * @param name name of a REST data source
+     * @return the service id of its HTTP client
+     */
+    public static String serviceId(String name) {
+        return SERVICE_ID_PREFIX + name;
     }
 
     /**
@@ -65,8 +88,10 @@ public final class RestDataSourceClient implements AutoCloseable {
         return url;
     }
 
-    @Override
-    public void close() throws Exception {
-        httpClient.close();
+    /**
+     * @return the service id of the HTTP client, {@code restdatasource-<name>}
+     */
+    public String getServiceId() {
+        return serviceId;
     }
 }

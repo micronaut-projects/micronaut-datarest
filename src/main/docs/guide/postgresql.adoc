@@ -107,7 +107,7 @@ grant usage, select on all sequences in schema public to web_anon;
 
 A table the role cannot see is reported as `Could not find the table in the schema cache`. PostgREST also caches the schema at start-up, so after creating or altering tables https://docs.postgrest.org/en/v16/references/schema_cache.html[reload the schema cache] or restart the server.
 
-To send a JWT or any other header with every request, configure the data source's HTTP client as described in the <<quickStart>>.
+To act as a role other than the anonymous one, every request must carry a JWT signed with the secret PostgREST was started with, whose `role` claim names a role granted to the PostgREST authenticator user. Attach it with a client filter on the service id `restdatasource-<name>`, or forward the caller's token with Micronaut Security's token propagation, as described in <<security>>.
 
 == Limitations
 

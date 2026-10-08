@@ -48,4 +48,4 @@ class BookService {
 
 When more than one data source is configured, qualify the injection point with the data source name, for example `@Named("postgres")`.
 
-To tune the underlying HTTP client of a data source, declare a https://docs.micronaut.io/latest/guide/#serviceDiscovery[service client configuration] named `restdatasource` followed by the data source name, for example `micronaut.http.services.restdatasourcedefault.read-timeout`.
+The HTTP client of a data source is a regular Micronaut service client with the service id `restdatasource-` followed by the data source name. Tune it under `micronaut.http.services.restdatasource-default.*`, for example `read-timeout`, and attach credentials with client filters or Micronaut Security as described in <<security>>.

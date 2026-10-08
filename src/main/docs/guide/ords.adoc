@@ -89,7 +89,27 @@ begin
 end;
 ----
 
-With `p_auto_rest_auth` set to `true`, ORDS requires authentication. Configure the data source's HTTP client to send the credentials or token, as described in the <<quickStart>>.
+With `p_auto_rest_auth` set to `true`, ORDS only serves the object to callers holding the `oracle.dbtools.autorest.any.schema` role, or a privilege mapped to the object. The usual way to obtain that for a service is an OAuth 2.0 client credentials client granted the role:
+
+[source,sql]
+----
+begin
+  oauth.create_client(
+    p_name             => 'my-service',
+    p_grant_type       => 'client_credentials',
+    p_support_email    => 'ops@example.com',
+    p_privilege_names  => null,
+    p_token_duration   => null,
+    p_refresh_duration => null,
+    p_code_duration    => null);
+  oauth.grant_client_role('my-service', 'oracle.dbtools.autorest.any.schema');
+  commit;
+end;
+
+select client_id, client_secret from user_ords_clients where name = 'my-service';
+----
+
+Tokens are issued by `POST /ords/{schema-alias}/oauth/token` with `grant_type=client_credentials` and the client id and secret as HTTP basic credentials. Micronaut Security can perform that exchange and attach the token to the data source's requests, as described in <<security>>.
 
 == Limitations
 
