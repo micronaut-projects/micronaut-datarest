@@ -13,9 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.micronaut.datarest.ords;
+package io.micronaut.datarest.core.repositories.ords;
 
-import io.micronaut.context.annotation.EachBean;
 import io.micronaut.data.model.Page;
 import io.micronaut.data.model.Pageable;
 import io.micronaut.datarest.core.clients.RestDataSourceClient;

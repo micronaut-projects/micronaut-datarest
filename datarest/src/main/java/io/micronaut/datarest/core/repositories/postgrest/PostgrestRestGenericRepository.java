@@ -13,9 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.micronaut.datarest.postgrest;
+package io.micronaut.datarest.core.repositories.postgrest;
 
-import io.micronaut.context.annotation.EachBean;
 import io.micronaut.core.type.Argument;
 import io.micronaut.data.model.Page;
 import io.micronaut.data.model.Pageable;

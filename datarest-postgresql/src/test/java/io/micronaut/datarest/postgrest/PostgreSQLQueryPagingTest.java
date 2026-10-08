@@ -3,6 +3,9 @@ package io.micronaut.datarest.postgrest;
 import io.micronaut.core.annotation.NonNull;
 import io.micronaut.data.model.Page;
 import io.micronaut.data.model.Sort;
+import io.micronaut.datarest.core.repositories.RestGenericRepository;
+import io.micronaut.datarest.core.repositories.postgrest.PostgrestQuery;
+import io.micronaut.datarest.core.repositories.postgrest.PostgrestRestGenericRepository;
 import io.micronaut.datarest.tck.Book;
 import io.micronaut.datarest.tck.BookSave;
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
@@ -15,6 +18,7 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -31,7 +35,8 @@ class PostgreSQLQueryPagingTest implements TestPropertyProvider {
     }
 
     @Test
-    void queryPagesContinueFromTheirOffset(PostgrestRestGenericRepository repository) {
+    void queryPagesContinueFromTheirOffset(RestGenericRepository genericRepository) {
+        PostgrestRestGenericRepository repository = assertInstanceOf(PostgrestRestGenericRepository.class, genericRepository);
         String table = "books";
         List<Long> ids = List.of("A", "B", "C", "D", "E").stream()
             .map(title -> repository.save(table, new BookSave(title, "author", null), Book.class).id())

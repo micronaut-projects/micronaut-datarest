@@ -2,6 +2,7 @@ package io.micronaut.datarest.ords;
 
 import io.micronaut.data.model.Pageable;
 import io.micronaut.data.model.Sort;
+import io.micronaut.datarest.core.repositories.ords.OrdsRequests;
 import io.micronaut.json.JsonMapper;
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
 import jakarta.inject.Inject;

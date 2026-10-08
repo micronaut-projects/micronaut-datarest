@@ -20,6 +20,6 @@
  * @since 1.0.0
  */
 @NullMarked
-package io.micronaut.datarest.postgrest;
+package io.micronaut.datarest.core.repositories.postgrest;
 
 import org.jspecify.annotations.NullMarked;

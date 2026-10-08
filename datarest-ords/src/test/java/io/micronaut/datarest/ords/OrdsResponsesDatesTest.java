@@ -1,5 +1,6 @@
 package io.micronaut.datarest.ords;
 
+import io.micronaut.datarest.core.repositories.ords.OrdsResponses;
 import io.micronaut.json.JsonMapper;
 import io.micronaut.json.tree.JsonNode;
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest;

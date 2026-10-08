@@ -2,6 +2,8 @@ package io.micronaut.datarest.postgrest;
 
 import io.micronaut.data.model.Page;
 import io.micronaut.data.model.Sort;
+import io.micronaut.datarest.core.repositories.postgrest.PostgrestQuery;
+import io.micronaut.datarest.core.repositories.postgrest.PostgrestResponses;
 import io.micronaut.http.HttpResponse;
 import io.micronaut.http.simple.SimpleHttpResponseFactory;
 import org.junit.jupiter.api.Test;

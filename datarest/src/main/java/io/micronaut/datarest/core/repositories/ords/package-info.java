@@ -20,6 +20,6 @@
  * @since 1.0.0
  */
 @NullMarked
-package io.micronaut.datarest.ords;
+package io.micronaut.datarest.core.repositories.ords;
 
 import org.jspecify.annotations.NullMarked;

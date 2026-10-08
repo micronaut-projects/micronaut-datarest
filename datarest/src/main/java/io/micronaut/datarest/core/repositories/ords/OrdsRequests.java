@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.micronaut.datarest.ords;
+package io.micronaut.datarest.core.repositories.ords;
 
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.data.model.Pageable;
