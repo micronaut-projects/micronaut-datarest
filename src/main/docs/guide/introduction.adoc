@@ -1,1 +1,16 @@
-TODO
+Micronaut Data REST lets a Micronaut application perform CRUD operations against a database that is exposed through an HTTP API, rather than through a JDBC or R2DBC driver. The application talks to the database's REST gateway; the gateway talks to the database.
+
+The project consists of a runtime module and an annotation processor:
+
+[cols="1,3"]
+|===
+|Module |Purpose
+
+|`micronaut-datarest`
+|Defines the REST data source configuration and the three repository contracts: api:datarest.core.repositories.RestGenericRepository[] for blocking calls, api:datarest.core.repositories.ReactiveRestGenericRepository[] for Reactive Streams `Publisher` calls, and api:datarest.core.repositories.ReactorRestGenericRepository[] for https://projectreactor.io[Project Reactor] `Mono` calls. It implements them for Oracle Database tables exposed through https://docs.oracle.com/en/database/oracle/oracle-rest-data-services/[Oracle REST Data Services (ORDS)] AutoREST, see <<ords>>, and for PostgreSQL tables exposed through https://docs.postgrest.org/en/v16/[PostgREST v16], see <<postgresql>>. The `dialect` of each data source selects the implementation.
+
+|`micronaut-datarest-processor`
+|Annotation processor that implements interfaces annotated with ann:datarest.core.annotations.RestRepository[] at compilation time. See <<entityRepositories>>.
+|===
+
+Both gateway implementations pass the Micronaut Data REST technology compatibility kit, so an application written against the contracts behaves the same way on either gateway, within the limits documented in each gateway's section.

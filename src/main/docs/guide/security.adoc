@@ -1,0 +1,64 @@
+Authentication and authorization are the gateway's job: ORDS and PostgREST each decide who may read or write a table, as described in <<ords>> and <<postgresql>>. Micronaut Data REST's job is to let you attach the credentials those gateways expect to every request of a data source, using the same mechanisms as any other outbound HTTP call in Micronaut.
+
+== The data source is a Micronaut service
+
+The HTTP client of a data source named `foo` is obtained from Micronaut's client registry under the service id `restdatasource-foo`, exactly as if it had been injected with `@Client("restdatasource-foo")`. Two things follow from that:
+
+* `micronaut.http.services.restdatasource-foo.*` configures the client: timeouts, connection pool, SSL, proxy and so on.
+* Every https://docs.micronaut.io/latest/guide/#clientFilter[client filter] whose service id matches is applied to every request of the data source, including the filters Micronaut Security provides.
+
+api:datarest.core.clients.RestDataSourceClient[] exposes the service id through `getServiceId()`, and the prefix as `RestDataSourceClient.SERVICE_ID_PREFIX`.
+
+== Sending a static token or password
+
+A client filter targeting the service id is the simplest way to add credentials. It works for a PostgREST JWT, ORDS HTTP basic credentials, or any API key:
+
+snippet::io.micronaut.datarest.docs.BearerTokenFilter[tags="class", indent=0]
+
+<1> The filter applies to every request of the `default` data source and to nothing else.
+<2> The token comes from configuration here. Any source works, including a client that fetches it.
+<3> `bearerAuth` sets the `Authorization` header. Use `basicAuth(user, password)` for ORDS basic credentials.
+
+The test suites of this project use exactly this filter: their PostgREST container only grants privileges to the role named in a JWT, and the tests provide that JWT as the `books.token` property.
+
+== Propagating the caller's token
+
+When your application itself authenticates requests with Micronaut Security and the gateway accepts the same tokens, https://micronaut-projects.github.io/micronaut-security/latest/guide/#tokenPropagation[token propagation] forwards the incoming token without any code:
+
+[configuration]
+----
+micronaut:
+  security:
+    token:
+      propagation:
+        enabled: true
+        service-id-regex: restdatasource-.*
+----
+
+This fits PostgREST well, since PostgREST runs each request as the role named in the token's claims and PostgreSQL row level security can then act on the caller's identity.
+
+== Obtaining a token with OAuth 2.0 client credentials
+
+ORDS protects AutoREST objects with OAuth 2.0 and issues tokens from its own `oauth/token` endpoint. Micronaut Security's https://micronaut-projects.github.io/micronaut-security/latest/guide/#clientCredentials[client credentials] support obtains and refreshes such tokens and attaches them to the matching service ids:
+
+[configuration]
+----
+micronaut:
+  security:
+    oauth2:
+      clients:
+        ords:
+          client-id: '${ORDS_CLIENT_ID}'
+          client-secret: '${ORDS_CLIENT_SECRET}'
+          token:
+            url: http://localhost:8080/ords/hr/oauth/token
+            auth-method: client_secret_basic
+          client-credentials:
+            service-id-regex: restdatasource-.*
+----
+
+This requires the `io.micronaut.security:micronaut-security-oauth2` dependency. The technology compatibility kit's ORDS fixture protects its table with `p_auto_rest_auth => true`, registers a client credentials client, and a test scoped filter performs the same token request by hand.
+
+== Transport security
+
+Use an `https` URL for the data source and configure trust and client certificates under `micronaut.http.services.restdatasource-<name>.ssl`, as for any Micronaut HTTP client. Credentials sent to a gateway over plain `http` are visible on the network.

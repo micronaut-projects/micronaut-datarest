@@ -1,0 +1,107 @@
+With the `POSTGREST` dialect, a REST data source consumes the HTTP API of https://docs.postgrest.org/en/v16/[PostgREST v16]. PostgREST turns a PostgreSQL schema into a RESTful API, where every table and view becomes an endpoint. Point a REST data source at a running PostgREST server and the repositories operate on the tables it exposes.
+
+== Configuration
+
+The data source URL is the root of the PostgREST server. PostgREST serves every table of the configured schema directly under it:
+
+[configuration]
+----
+restdatasources:
+  default:
+    url: http://localhost:3000
+----
+
+== Beans
+
+For every data source the module creates one implementation of each contract:
+
+[cols="1,1"]
+|===
+|Contract |PostgREST implementation
+
+|api:datarest.core.repositories.RestGenericRepository[]
+|api:datarest.core.repositories.postgrest.PostgreSQLRestGenericRepository[]
+
+|api:datarest.core.repositories.ReactiveRestGenericRepository[]
+|api:datarest.core.repositories.postgrest.PostgreSQLReactiveRestGenericRepository[]
+
+|api:datarest.core.repositories.ReactorRestGenericRepository[]
+|api:datarest.core.repositories.postgrest.PostgreSQLReactorRestGenericRepository[]
+|===
+
+Inject the contract to stay gateway agnostic, or the implementation to access the PostgREST specific <<postgresql-queries,query methods>>.
+
+== How operations map to PostgREST
+
+Every repository operation is a single PostgREST request. The table below documents the request that each operation issues, following the https://docs.postgrest.org/en/v16/references/api.html[PostgREST API reference].
+
+[cols="1,2,3"]
+|===
+|Operation |Request |Notes
+
+|`save`
+|`POST /{table}` with `Prefer: return=representation`
+|The https://docs.postgrest.org/en/v16/references/api/tables_views.html#insert[inserted row] is returned and unwrapped from the JSON array PostgREST always answers with.
+
+|`findAll`
+|`GET /{table}` with `Prefer: count=exact`
+|Every row is returned, unless the server enforces a maximum. The page total is read from the https://docs.postgrest.org/en/v16/references/api/pagination_count.html[`Content-Range`] header.
+
+|`findAll` with a `Pageable`
+|`GET /{table}?limit=&offset=&order=`
+|Page size and offset become `limit` and `offset`; each sort order becomes `column.asc` or `column.desc` in https://docs.postgrest.org/en/v16/references/api/tables_views.html#ordering[`order`].
+
+|`findById`
+|`GET /{table}?{idColumn}=eq.{id}`
+|Uses the https://docs.postgrest.org/en/v16/references/api/tables_views.html#horizontal-filtering[`eq` operator]; an empty array yields `null`.
+
+|`update`
+|`PATCH /{table}?{idColumn}=eq.{id}` with `Prefer: return=representation`
+|Only the columns present in the body are https://docs.postgrest.org/en/v16/references/api/tables_views.html#update[updated]; the rest keep their values. An empty array yields `null`.
+
+|`count` and `existsById`
+|`HEAD /{table}` with `Prefer: count=exact`
+|No rows are transferred; the count comes from `Content-Range`.
+
+|`deleteById`
+|`DELETE /{table}?{idColumn}=eq.{id}` with `Prefer: return=representation`
+|The https://docs.postgrest.org/en/v16/references/api/tables_views.html#delete[deleted rows] are returned so they can be counted. Deleting without a filter is refused.
+|===
+
+The `idColumn` argument can name any column, not only the primary key, since PostgREST addresses rows through filters. If several rows match, `findById` and `update` return the first one and `deleteById` deletes them all.
+
+[[postgresql-queries]]
+== Queries
+
+Beyond the common contract, the PostgreSQL implementations accept an api:datarest.core.repositories.postgrest.PostgrestQuery[] to list, count or delete rows with arbitrary https://docs.postgrest.org/en/v16/references/api/tables_views.html#horizontal-filtering[PostgREST filters], ordering, pagination and https://docs.postgrest.org/en/v16/references/api/tables_views.html#vertical-filtering[column selection]:
+
+snippet::io.micronaut.datarest.docs.BookQueries[tags="queries", indent=0]
+
+<1> A filter is a column and a PostgREST operator expression.
+<2> `withOrder` accepts a Micronaut Data `Sort` or a raw PostgREST `order` value.
+<3> `withSelect` restricts the returned columns.
+<4> `deleteAll` requires at least one filter.
+
+A raw `order` value such as `published.desc.nullslast` is passed through unchanged. Filter values are passed verbatim to PostgREST, so any operator from the https://docs.postgrest.org/en/v16/references/api/tables_views.html#operators[operators table] can be used, such as `gte.2000`, `like.*Potter*` or `in.(1,2,3)`. `deleteAll` refuses a query without filters, to avoid emptying a table by accident.
+
+== Permissions and schema cache
+
+PostgREST exposes whatever the configured anonymous role, or the role of an authenticated JWT, is allowed to see. Grant that role the needed privileges on the tables you intend to use, as described in the https://docs.postgrest.org/en/v16/explanations/db_authz.html[PostgREST authorization documentation]:
+
+[source,sql]
+----
+create role web_anon nologin;
+grant usage on schema public to web_anon;
+grant select, insert, update, delete on all tables in schema public to web_anon;
+grant usage, select on all sequences in schema public to web_anon;
+----
+
+A table the role cannot see is reported as `Could not find the table in the schema cache`. PostgREST also caches the schema at start-up, so after creating or altering tables https://docs.postgrest.org/en/v16/references/schema_cache.html[reload the schema cache] or restart the server.
+
+To act as a role other than the anonymous one, every request must carry a JWT signed with the secret PostgREST was started with, whose `role` claim names a role granted to the PostgREST authenticator user. Attach it with a client filter on the service id `restdatasource-<name>`, or forward the caller's token with Micronaut Security's token propagation, as described in <<security>>.
+
+== Limitations
+
+* Rows are JSON objects keyed by column name; PostgREST returns the names exactly as they are in PostgreSQL.
+* Single-row operations unwrap the JSON array PostgREST answers with, rather than requesting `application/vnd.pgrst.object+json`.
+* Stored procedures (`/rpc/*`) and resource embedding are not covered by the repositories. Use the data source's `HttpClient` from api:datarest.core.clients.RestDataSourceClient[] for those.

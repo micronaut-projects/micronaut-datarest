@@ -1,1 +1,32 @@
-TODO
+Add the module to your build. It supports both Oracle Database behind https://docs.oracle.com/en/database/oracle/oracle-rest-data-services/[Oracle REST Data Services (ORDS)] and PostgreSQL behind https://docs.postgrest.org/en/v16/[PostgREST]:
+
+dependency:micronaut-datarest[groupId="io.micronaut.datarest"]
+
+Then configure one or more REST data sources. Each entry under `restdatasources` creates a named data source whose `url` is the base URL of the HTTP API. The shape of the URL depends on the gateway:
+
+[configuration]
+----
+restdatasources:
+  default:
+    url: http://localhost:8080/ords/hr   # ORDS: the REST enabled schema alias
+  postgres:
+    url: http://localhost:3000           # PostgREST: the server root
+----
+
+For every data source, Micronaut creates:
+
+* an api:datarest.core.clients.RestDataSourceClient[] bean holding an HTTP client pointing at the base URL,
+* an api:datarest.core.repositories.RestGenericRepository[] bean,
+* an api:datarest.core.repositories.ReactiveRestGenericRepository[] bean,
+* an api:datarest.core.repositories.ReactorRestGenericRepository[] bean.
+
+Inject a repository and name the table you want to work with:
+
+snippet::io.micronaut.datarest.docs.BookService[tags="class", indent=0]
+
+<1> One api:datarest.core.repositories.RestGenericRepository[] bean exists per data source. With a single data source no qualifier is needed.
+<2> Every call names the table and the type rows are deserialized into. `Book` is a `@Serdeable` record, see <<entityRepositories>>.
+
+When more than one data source is configured, qualify the injection point with the data source name, for example `@Named("postgres")`.
+
+The HTTP client of a data source is a regular Micronaut service client with the service id `restdatasource-` followed by the data source name. Tune it under `micronaut.http.services.restdatasource-default.*`, for example `read-timeout`, and attach credentials with client filters or Micronaut Security as described in <<security>>.

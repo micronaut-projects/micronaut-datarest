@@ -11,12 +11,24 @@ plugins {
 
 rootProject.name = 'micronaut-datarest-parent'
 
+include 'datarest-tck'
 include 'datarest'
+include 'datarest-processor'
 include 'datarest-bom'
+include 'test-suite-utils'
+include 'test-suite'
+include 'test-suite-kotlin'
+include 'test-suite-groovy'
+include 'test-suite-python'
 
 enableFeaturePreview 'TYPESAFE_PROJECT_ACCESSORS'
 
 micronautBuild {
     useStandardizedProjectNames = true
     importMicronautCatalog()
+    importMicronautCatalog("micronaut-serde")
+    importMicronautCatalog("micronaut-sql")
+    importMicronautCatalog("micronaut-data")
+    importMicronautCatalog("micronaut-reactor")
+    importMicronautCatalog("micronaut-sourcegen")
 }

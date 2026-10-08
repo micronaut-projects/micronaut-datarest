@@ -2,5 +2,15 @@ introduction:
   title: Introduction
 quickStart:
   title: Quick Start
+repositories:
+  title: Repositories
+entityRepositories:
+  title: Entity Repositories
+security:
+  title: Security
+ords:
+  title: Oracle with ORDS
+postgresql:
+  title: PostgreSQL with PostgREST
 repository: Repository
 releaseHistory: Release History

@@ -17,11 +17,22 @@
 
 [versions]
 micronaut = "5.2.15"
-micronaut-test = "5.2.0"
+micronaut-serde = "3.2.4"
+micronaut-sql = "7.2.0"
+micronaut-data = "5.2.2"
+micronaut-reactor = "4.3.0"
+micronaut-sourcegen = "2.2.3"
 
 [libraries]
-# Core
 micronaut-core = { module = 'io.micronaut:micronaut-core-bom', version.ref = 'micronaut' }
+testcontainers-postgresql = { module = 'org.testcontainers:testcontainers-postgresql' }
+micronaut-serde = { module = "io.micronaut.serde:micronaut-serde-bom", version.ref = "micronaut-serde" }
+micronaut-reactor = { module = "io.micronaut.reactor:micronaut-reactor-bom", version.ref = "micronaut-reactor" }
+micronaut-sourcegen = { module = "io.micronaut.sourcegen:micronaut-sourcegen-bom", version.ref = "micronaut-sourcegen" }
+micronaut-sql = { module = "io.micronaut.sql:micronaut-sql-bom", version.ref = "micronaut-sql" }
+micronaut-data = { module = "io.micronaut.data:micronaut-data-bom", version.ref = "micronaut-data" }
+
+testcontainers-oracle-free = { module = "org.testcontainers:testcontainers-oracle-free" }
 
 [bundles]
 
