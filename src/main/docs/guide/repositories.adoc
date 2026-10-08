@@ -1,0 +1,43 @@
+Both repository contracts expose the same operations. api:datarest.core.repositories.RestCrudRepository[] returns values directly and is suited to servlet or virtual-thread applications, while api:datarest.core.repositories.ReactorRestCrudRepository[] returns `Mono` and never blocks.
+
+|===
+|Operation |Blocking |Reactor
+
+|Save a row
+|`T save(table, row, type)`
+|`Mono<T> save(table, row, type)`
+
+|Find every row
+|`Page<T> findAll(table, type)`
+|`Mono<Page<T>> findAll(table, type)`
+
+|Find a page
+|`Page<T> findAll(table, pageable, type)`
+|`Mono<Page<T>> findAll(table, pageable, type)`
+
+|Find by identifier
+|`@Nullable T findById(table, idColumn, id, type)`
+|`Mono<T> findById(table, idColumn, id, type)`
+
+|Update by identifier
+|`@Nullable T update(table, idColumn, id, row, type)`
+|`Mono<T> update(table, idColumn, id, row, type)`
+
+|Count rows
+|`long count(table)`
+|`Mono<Long> count(table)`
+
+|Check existence
+|`boolean existsById(table, idColumn, id)`
+|`Mono<Boolean> existsById(table, idColumn, id)`
+
+|Delete by identifier
+|`int deleteById(table, idColumn, id)`
+|`Mono<Integer> deleteById(table, idColumn, id)`
+|===
+
+Rows are serialized and deserialized with the application's JSON codec, so request bodies and result types can be any serializable class, including `Map<String, Object>` for partial updates.
+
+Listing operations return https://micronaut-projects.github.io/micronaut-data/latest/api/io/micronaut/data/model/Page.html[Micronaut Data `Page`] instances. The page returned for a `Pageable` keeps the request's sort, so `page.nextPageable()` can be passed straight back to `list`.
+
+The `findById` and `update` operations return `null` (or an empty `Mono`) when no row matches, rather than failing.

@@ -1,0 +1,62 @@
+The `micronaut-datarest-postgresql` module consumes the HTTP API of https://docs.postgrest.org/en/v16/[PostgREST v16]. PostgREST turns a PostgreSQL schema into a RESTful API, where every table and view becomes an endpoint. Point a REST data source at a running PostgREST server and the repositories operate on the tables it exposes.
+
+dependency:micronaut-datarest-postgresql[groupId="io.micronaut.datarest"]
+
+== How operations map to PostgREST
+
+Every repository operation is a single PostgREST request. The table below documents the request that each operation issues, following the https://docs.postgrest.org/en/v16/references/api.html[PostgREST API reference].
+
+|===
+|Operation |Request |Notes
+
+|`save`
+|`POST /{table}` with `Prefer: return=representation`
+|The https://docs.postgrest.org/en/v16/references/api/tables_views.html#insert[inserted row] is returned and unwrapped from the JSON array PostgREST always answers with.
+
+|`findAll`
+|`GET /{table}` with `Prefer: count=exact`
+|The page total is read from the https://docs.postgrest.org/en/v16/references/api/pagination_count.html[`Content-Range`] header.
+
+|`findAll` with a `Pageable`
+|`GET /{table}?limit=&offset=&order=`
+|Page size and offset become `limit` and `offset`; each sort order becomes `column.asc` or `column.desc` in https://docs.postgrest.org/en/v16/references/api/tables_views.html#ordering[`order`].
+
+|`findById`
+|`GET /{table}?{idColumn}=eq.{id}`
+|Uses the https://docs.postgrest.org/en/v16/references/api/tables_views.html#horizontal-filtering[`eq` operator]; an empty array yields `null`.
+
+|`update`
+|`PATCH /{table}?{idColumn}=eq.{id}` with `Prefer: return=representation`
+|Only the columns present in the body are https://docs.postgrest.org/en/v16/references/api/tables_views.html#update[updated].
+
+|`count` and `existsById`
+|`HEAD /{table}` with `Prefer: count=exact`
+|No rows are transferred; the count comes from `Content-Range`.
+
+|`deleteById`
+|`DELETE /{table}?{idColumn}=eq.{id}` with `Prefer: return=representation`
+|The https://docs.postgrest.org/en/v16/references/api/tables_views.html#delete[deleted rows] are returned so they can be counted. Deleting without a filter is refused.
+|===
+
+== Queries
+
+Beyond the common contract, the PostgreSQL repositories accept an api:datarest.postgresql.PostgrestQuery[] to list, count or delete rows with arbitrary https://docs.postgrest.org/en/v16/references/api/tables_views.html#horizontal-filtering[PostgREST filters], ordering, pagination and https://docs.postgrest.org/en/v16/references/api/tables_views.html#vertical-filtering[column selection]:
+
+[source,java]
+----
+PostgrestQuery query = PostgrestQuery.filter("author", "eq.Frank Herbert")
+    .withOrder("published.desc")
+    .withPage(10, 0)
+    .withSelect("id,title");
+
+Page<Book> books = postgreSQLRepository.findAll("books", query, Book.class);
+long count = postgreSQLRepository.count("books", query);
+----
+
+Filter values are passed verbatim to PostgREST, so any operator from the https://docs.postgrest.org/en/v16/references/api/tables_views.html#operators[operators table] can be used, such as `gte.2000`, `like.*Potter*` or `in.(1,2,3)`.
+
+== Permissions
+
+PostgREST exposes whatever the configured anonymous role, or the role of an authenticated JWT, is allowed to see. Grant that role the needed privileges on the tables you intend to use, as described in the https://docs.postgrest.org/en/v16/explanations/db_authz.html[PostgREST authorization documentation]. A table the role cannot see is reported as `Could not find the table in the schema cache`.
+
+PostgREST caches the schema at start-up. After creating or altering tables, https://docs.postgrest.org/en/v16/references/schema_cache.html[reload the schema cache] or restart the server.

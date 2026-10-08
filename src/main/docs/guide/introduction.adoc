@@ -1,1 +1,6 @@
-TODO
+Micronaut Data REST lets a Micronaut application perform CRUD operations against a database that is exposed through an HTTP API, rather than through a JDBC or R2DBC driver.
+
+The project is split into two modules:
+
+* `micronaut-datarest` defines the REST data source configuration and the repository contracts: api:datarest.core.repositories.RestCrudRepository[] for blocking calls and api:datarest.core.repositories.ReactorRestCrudRepository[] for https://projectreactor.io[Project Reactor] calls.
+* `micronaut-datarest-postgresql` implements those contracts for PostgreSQL tables exposed through https://docs.postgrest.org/en/v16/[PostgREST v16].

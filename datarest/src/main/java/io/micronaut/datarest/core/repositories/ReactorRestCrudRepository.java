@@ -17,7 +17,7 @@ package io.micronaut.datarest.core.repositories;
 
 import io.micronaut.data.model.Page;
 import io.micronaut.data.model.Pageable;
-import org.jspecify.annotations.Nullable;
+import reactor.core.publisher.Mono;
 
 /**
  * CRUD operations against a table exposed by a REST data source.
@@ -25,7 +25,7 @@ import org.jspecify.annotations.Nullable;
  * @author Sergio del Amo
  * @since 1.0.0
  */
-public interface RestCrudRepository {
+public interface ReactorRestCrudRepository {
 
     /**
      * Saves a row and returns the persisted representation.
@@ -36,7 +36,7 @@ public interface RestCrudRepository {
      * @param <T>   row type
      * @return the persisted row
      */
-    <T> T save(String table, Object row, Class<T> type);
+    <T> Mono<T> save(String table, Object row, Class<T> type);
 
     /**
      * Lists the rows of a table.
@@ -46,7 +46,7 @@ public interface RestCrudRepository {
      * @param <T>   row type
      * @return a page of rows
      */
-    <T> Page<T> findAll(String table, Class<T> type);
+    <T> Mono<Page<T>> findAll(String table, Class<T> type);
 
     /**
      * Lists a page of rows of a table, honouring the page size, offset and sort of the {@link Pageable}.
@@ -57,7 +57,7 @@ public interface RestCrudRepository {
      * @param <T>      row type
      * @return a page of rows
      */
-    <T> Page<T> findAll(String table, Pageable pageable, Class<T> type);
+    <T> Mono<Page<T>> findAll(String table, Pageable pageable, Class<T> type);
 
     /**
      * Finds the row whose identifier column matches the given value.
@@ -69,7 +69,7 @@ public interface RestCrudRepository {
      * @param <T>      row type
      * @return the row, or {@code null} if none matches
      */
-    <T> @Nullable T findById(String table, String idColumn, Object id, Class<T> type);
+    <T> Mono<T> findById(String table, String idColumn, Object id, Class<T> type);
 
     /**
      * Updates the row whose identifier column matches the given value and returns the updated representation.
@@ -82,7 +82,7 @@ public interface RestCrudRepository {
      * @param <T>      row type
      * @return the updated row, or {@code null} if no row matches
      */
-    <T> @Nullable T update(String table, String idColumn, Object id, Object row, Class<T> type);
+    <T> Mono<T> update(String table, String idColumn, Object id, Object row, Class<T> type);
 
     /**
      * Counts the rows of a table.
@@ -90,7 +90,7 @@ public interface RestCrudRepository {
      * @param table table name
      * @return the number of rows
      */
-    long count(String table);
+    Mono<Long> count(String table);
 
     /**
      * Checks whether a row whose identifier column matches the given value exists.
@@ -100,7 +100,7 @@ public interface RestCrudRepository {
      * @param id       identifier value
      * @return {@code true} if the row exists
      */
-    boolean existsById(String table, String idColumn, Object id);
+    Mono<Boolean> existsById(String table, String idColumn, Object id);
 
     /**
      * Deletes the row whose identifier column matches the given value.
@@ -110,5 +110,5 @@ public interface RestCrudRepository {
      * @param id       identifier value
      * @return the number of deleted rows
      */
-    int deleteById(String table, String idColumn, Object id);
+    Mono<Integer> deleteById(String table, String idColumn, Object id);
 }

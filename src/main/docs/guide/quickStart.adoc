@@ -1,1 +1,44 @@
-TODO
+To use Micronaut Data REST with PostgreSQL, add the following dependency to your build:
+
+dependency:micronaut-datarest-postgresql[groupId="io.micronaut.datarest"]
+
+Then configure one or more REST data sources. Each entry under `restdatasources` creates a named data source whose `url` is the base URL of the HTTP API:
+
+[configuration]
+----
+restdatasources:
+  default:
+    url: http://localhost:3000
+----
+
+For every data source, Micronaut creates:
+
+* an api:datarest.core.clients.RestDataSourceClient[] bean holding an HTTP client pointing at the base URL,
+* an api:datarest.core.repositories.RestCrudRepository[] bean,
+* an api:datarest.core.repositories.ReactorRestCrudRepository[] bean.
+
+Inject a repository and name the table you want to work with:
+
+[source,java]
+----
+@Singleton
+class BookService {
+    private final RestCrudRepository repository;
+
+    BookService(RestCrudRepository repository) {
+        this.repository = repository;
+    }
+
+    Book save(BookSave book) {
+        return repository.save("books", book, Book.class);
+    }
+
+    Page<Book> findAll(Pageable pageable) {
+        return repository.findAll("books", pageable, Book.class);
+    }
+}
+----
+
+When more than one data source is configured, qualify the injection point with the data source name, for example `@Named("default")`.
+
+To tune the underlying HTTP client of a data source, declare a https://docs.micronaut.io/latest/guide/#serviceDiscovery[service client configuration] named `restdatasource` followed by the data source name, for example `micronaut.http.services.restdatasourcedefault.read-timeout`.

@@ -18,6 +18,8 @@ import java.util.Map;
 
 public class PostgreSQL {
     private static final int POSTGREST_PORT = 3000;
+    /** Set once the containers are up, so several test classes can share them. */
+    private static String url;
 
     private static final Network NETWORK = Network.newNetwork();
     private static final String DB_ALIAS = "db";
@@ -64,16 +66,18 @@ public class PostgreSQL {
         return getProperties("default");
     }
 
-    public static Map<String, String> getProperties(String nameQualifier) {
-        DB.start();
-        executeSQL();
-        startRest();
-        try {
-            String url = new URI("http", null, POSTGREST.getHost(), POSTGREST.getMappedPort(POSTGREST_PORT), null, null, null).toString();
-            return Map.of("restdatasources." + nameQualifier + ".url", url);
-        } catch(URISyntaxException e) {
-            throw new IllegalStateException("Could not create the PostegreSQL REST URL", e);
+    public static synchronized Map<String, String> getProperties(String nameQualifier) {
+        if (url == null) {
+            DB.start();
+            executeSQL();
+            startRest();
+            try {
+                url = new URI("http", null, POSTGREST.getHost(), POSTGREST.getMappedPort(POSTGREST_PORT), null, null, null).toString();
+            } catch (URISyntaxException e) {
+                throw new IllegalStateException("Could not create the PostegreSQL REST URL", e);
+            }
         }
+        return Map.of("restdatasources." + nameQualifier + ".url", url);
     }
 
     private static void startRest() {

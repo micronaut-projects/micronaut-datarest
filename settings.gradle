@@ -11,8 +11,10 @@ plugins {
 
 rootProject.name = 'micronaut-datarest-parent'
 
+include 'datarest-tck'
 include 'datarest'
 include 'datarest-postgresql'
+include 'datarest-ords'
 include 'datarest-bom'
 
 enableFeaturePreview 'TYPESAFE_PROJECT_ACCESSORS'
@@ -23,4 +25,5 @@ micronautBuild {
     importMicronautCatalog("micronaut-serde")
     importMicronautCatalog("micronaut-sql")
     importMicronautCatalog("micronaut-data")
+    importMicronautCatalog("micronaut-reactor")
 }

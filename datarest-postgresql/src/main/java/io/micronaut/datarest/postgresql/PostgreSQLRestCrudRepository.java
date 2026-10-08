@@ -21,16 +21,8 @@ import io.micronaut.data.model.Page;
 import io.micronaut.data.model.Pageable;
 import io.micronaut.datarest.core.clients.RestDataSourceClient;
 import io.micronaut.datarest.core.repositories.RestCrudRepository;
-import io.micronaut.http.HttpHeaders;
-import io.micronaut.http.HttpRequest;
-import io.micronaut.http.HttpResponse;
-import io.micronaut.http.MutableHttpRequest;
 import io.micronaut.http.client.BlockingHttpClient;
-import io.micronaut.http.uri.UriBuilder;
 import org.jspecify.annotations.Nullable;
-
-import java.util.List;
-import java.util.Map;
 
 /**
  * {@link RestCrudRepository} implementation talking to a <a href="https://postgrest.org">PostgREST</a> API.
@@ -41,29 +33,6 @@ import java.util.Map;
  */
 @EachBean(RestDataSourceClient.class)
 public final class PostgreSQLRestCrudRepository implements AutoCloseable, RestCrudRepository {
-    /**
-     * Query parameter selecting the columns to return.
-     */
-    public static final String SELECT = "select";
-    /**
-     * Query parameter ordering the rows.
-     */
-    public static final String ORDER = "order";
-    /**
-     * Query parameter limiting the number of rows.
-     */
-    public static final String LIMIT = "limit";
-    /**
-     * Query parameter skipping rows.
-     */
-    public static final String OFFSET = "offset";
-    private static final String SLASH = "/";
-    private static final String PREFER = "Prefer";
-    private static final String RETURN_REPRESENTATION = "return=representation";
-    private static final String COUNT_EXACT = "count=exact";
-    private static final String EQ = "eq.";
-    private static final Argument<List<Map<String, Object>>> ROWS =
-            Argument.listOf(Argument.mapOf(String.class, Object.class));
     private final BlockingHttpClient client;
 
     /**
@@ -74,13 +43,18 @@ public final class PostgreSQLRestCrudRepository implements AutoCloseable, RestCr
     }
 
     @Override
-    public <T> T insert(String table, Object row, Class<T> type) {
-        return single(client.retrieve(insertRequest(table, row), Argument.listOf(type)));
+    public <T> T save(String table, Object row, Class<T> type) {
+        return PostgrestResponses.single(client.retrieve(PostgrestRequests.save(table, row), Argument.listOf(type)));
     }
 
     @Override
-    public <T> Page<T> list(String table, Class<T> type) {
-        return list(table, null, type);
+    public <T> Page<T> findAll(String table, Class<T> type) {
+        return findAll(table, (PostgrestQuery) null, type);
+    }
+
+    @Override
+    public <T> Page<T> findAll(String table, Pageable pageable, Class<T> type) {
+        return PostgrestResponses.page(client.exchange(PostgrestRequests.findAll(table, pageable), Argument.listOf(type)), pageable);
     }
 
     /**
@@ -92,17 +66,44 @@ public final class PostgreSQLRestCrudRepository implements AutoCloseable, RestCr
      * @param <T>   row type
      * @return a page of rows
      */
-    public <T> Page<T> list(String table, @Nullable PostgrestQuery query, Class<T> type) {
-        HttpResponse<List<T>> response = client.exchange(
-                HttpRequest.GET(tableUri(table, query).build()).header(PREFER, COUNT_EXACT),
-                Argument.listOf(type));
-        List<T> items = response.body() == null ? List.of() : response.body();
-        return page(items, query, response.getHeaders().get(HttpHeaders.CONTENT_RANGE));
+    public <T> Page<T> findAll(String table, @Nullable PostgrestQuery query, Class<T> type) {
+        return PostgrestResponses.page(client.exchange(PostgrestRequests.findAll(table, query), Argument.listOf(type)), query);
+    }
+
+    @Override
+    public <T> @Nullable T findById(String table, String idColumn, Object id, Class<T> type) {
+        return PostgrestResponses.firstOrNull(client.retrieve(PostgrestRequests.findById(table, idColumn, id), Argument.listOf(type)));
+    }
+
+    @Override
+    public <T> @Nullable T update(String table, String idColumn, Object id, Object row, Class<T> type) {
+        return PostgrestResponses.firstOrNull(client.retrieve(PostgrestRequests.update(table, idColumn, id, row), Argument.listOf(type)));
+    }
+
+    @Override
+    public long count(String table) {
+        return count(table, null);
+    }
+
+    /**
+     * Counts the rows matching a query without fetching them.
+     *
+     * @param table table name
+     * @param query filters; {@code null} for every row
+     * @return the number of matching rows
+     */
+    public long count(String table, @Nullable PostgrestQuery query) {
+        return PostgrestResponses.count(client.exchange(PostgrestRequests.count(table, query)));
+    }
+
+    @Override
+    public boolean existsById(String table, String idColumn, Object id) {
+        return PostgrestResponses.count(client.exchange(PostgrestRequests.existsById(table, idColumn, id))) > 0;
     }
 
     @Override
     public int deleteById(String table, String idColumn, Object id) {
-        return delete(table, byId(idColumn, id));
+        return client.retrieve(PostgrestRequests.deleteById(table, idColumn, id), PostgrestResponses.ROWS).size();
     }
 
     /**
@@ -113,78 +114,12 @@ public final class PostgreSQLRestCrudRepository implements AutoCloseable, RestCr
      * @return the number of deleted rows
      * @throws IllegalArgumentException if the query has no filters
      */
-    public int delete(String table, PostgrestQuery query) {
-        if (query.filters().isEmpty()) {
-            throw new IllegalArgumentException("Refusing to delete from '" + table + "' without filters");
-        }
-        // PostgREST answers 204 by default; asking for the representation gives us the deleted rows to count.
-        MutableHttpRequest<Object> request = HttpRequest.DELETE(tableUri(table, query).build());
-        return client.retrieve(request.header(PREFER, RETURN_REPRESENTATION), ROWS).size();
+    public int deleteAll(String table, PostgrestQuery query) {
+        return client.retrieve(PostgrestRequests.deleteAll(table, query), PostgrestResponses.ROWS).size();
     }
 
     @Override
     public void close() throws Exception {
         client.close();
-    }
-
-    private static PostgrestQuery byId(String idColumn, Object id) {
-        return PostgrestQuery.filter(idColumn, EQ + id);
-    }
-
-    /**
-     * PostgREST always answers with a JSON array unless asked for {@code application/vnd.pgrst.object+json},
-     * a media type the Micronaut client cannot decode, so single-row operations unwrap the array here.
-     */
-    private static <T> T single(List<T> rows) {
-        if (rows.isEmpty()) {
-            throw new IllegalStateException("PostgREST returned no row");
-        }
-        return rows.get(0);
-    }
-
-    private HttpRequest<?> insertRequest(String table, Object row) {
-        return HttpRequest.POST(tableUri(table, null).build(), row).header(PREFER, RETURN_REPRESENTATION);
-    }
-
-    /**
-     * Parses {@code Content-Range: 0-1/2}, or a range starting with {@code *} when the page is empty.
-     * The page number is derived from the offset and the requested limit; without a limit the page is unpaged.
-     */
-    private static <T> Page<T> page(List<T> items, @Nullable PostgrestQuery query, @Nullable String contentRange) {
-        int offset = 0;
-        long total = items.size();
-        if (contentRange != null) {
-            String[] rangeAndTotal = contentRange.split("/");
-            if (rangeAndTotal.length == 2 && !"*".equals(rangeAndTotal[1])) {
-                total = Long.parseLong(rangeAndTotal[1]);
-            }
-            if (!rangeAndTotal[0].startsWith("*")) {
-                offset = Integer.parseInt(rangeAndTotal[0].split("-")[0]);
-            }
-        }
-        Pageable pageable = query != null && query.limit() != null && query.limit() > 0
-            ? Pageable.from(offset / query.limit(), query.limit())
-            : Pageable.unpaged();
-        return Page.of(items, pageable, total);
-    }
-
-    private static UriBuilder tableUri(String table, @Nullable PostgrestQuery query) {
-        UriBuilder uri = UriBuilder.of(SLASH).path(table);
-        if (query != null) {
-            query.filters().forEach(uri::queryParam);
-            if (query.select() != null) {
-                uri.queryParam(SELECT, query.select());
-            }
-            if (query.order() != null) {
-                uri.queryParam(ORDER, query.order());
-            }
-            if (query.limit() != null) {
-                uri.queryParam(LIMIT, query.limit());
-            }
-            if (query.offset() != null) {
-                uri.queryParam(OFFSET, query.offset());
-            }
-        }
-        return uri;
     }
 }
