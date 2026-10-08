@@ -26,6 +26,7 @@ import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -53,6 +54,7 @@ public final class OrdsRequests {
      */
     public static final String Q = "q";
     private static final String SLASH = "/";
+    private static final char[] HEX = "0123456789ABCDEF".toCharArray();
     private static final String ORDER_BY = "$orderby";
     private static final String ASC = "ASC";
     private static final String DESC = "DESC";
@@ -146,11 +148,36 @@ public final class OrdsRequests {
      * {@code /table/}: AutoREST collections end with a slash, otherwise ORDS redirects.
      */
     private static UriBuilder collection(String table) {
-        return UriBuilder.of(SLASH).path(table).path(SLASH);
+        return UriBuilder.of(SLASH + encodeSegment(table) + SLASH);
     }
 
     private static URI row(String table, Object id) {
-        return UriBuilder.of(SLASH).path(table).path(String.valueOf(id)).build();
+        return UriBuilder.of(SLASH + encodeSegment(table) + SLASH + encodeSegment(String.valueOf(id))).build();
+    }
+
+    /**
+     * Percent-encodes one path segment as RFC 3986 requires, keeping only unreserved characters. A key
+     * containing {@code /}, {@code ?}, {@code #}, {@code %} or a space therefore stays inside its segment
+     * instead of being read as more path, a query or a fragment.
+     *
+     * @param segment table alias or primary key value
+     * @return the encoded segment
+     */
+    static String encodeSegment(String segment) {
+        StringBuilder encoded = new StringBuilder(segment.length());
+        for (byte b : segment.getBytes(StandardCharsets.UTF_8)) {
+            if (isUnreserved(b)) {
+                encoded.append((char) b);
+            } else {
+                encoded.append('%').append(HEX[(b >> 4) & 0xF]).append(HEX[b & 0xF]);
+            }
+        }
+        return encoded.toString();
+    }
+
+    private static boolean isUnreserved(byte b) {
+        return (b >= 'A' && b <= 'Z') || (b >= 'a' && b <= 'z') || (b >= '0' && b <= '9')
+            || b == '-' || b == '.' || b == '_' || b == '~';
     }
 
     /**

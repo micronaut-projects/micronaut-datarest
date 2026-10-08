@@ -25,4 +25,16 @@ class OrdsRequestsTest {
         assertEquals("/books/1", requests.findById("books", 1).getUri().toString());
         assertEquals("/books/1", requests.deleteById("books", 1).getUri().toString());
     }
+
+    @Test
+    void tableAliasesAndKeysArePercentEncodedPerSegment() {
+        OrdsRequests requests = new OrdsRequests(jsonMapper);
+        assertEquals("/books/a%20b", requests.findById("books", "a b").getUri().toString());
+        assertEquals("/books/a%2Fb", requests.findById("books", "a/b").getUri().toString());
+        assertEquals("/books/a%3Fb%23c", requests.deleteById("books", "a?b#c").getUri().toString());
+        assertEquals("/books/100%25", requests.findById("books", "100%").getUri().toString());
+        assertEquals("/books/caf%C3%A9", requests.findById("books", "caf\u00e9").getUri().toString());
+        assertEquals("/my%20table/", requests.findAll("my table", null).getUri().toString());
+        assertEquals("/books/ISBN-978.0_1~", requests.findById("books", "ISBN-978.0_1~").getUri().toString());
+    }
 }
