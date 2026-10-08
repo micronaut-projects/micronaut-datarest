@@ -19,10 +19,12 @@ import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.type.Argument;
 import io.micronaut.data.model.Page;
 import io.micronaut.data.model.Pageable;
+import io.micronaut.data.model.Sort;
 import io.micronaut.http.HttpHeaders;
 import io.micronaut.http.HttpResponse;
 import org.jspecify.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -41,6 +43,9 @@ public final class PostgrestResponses {
     public static final Argument<List<Map<String, Object>>> ROWS =
             Argument.listOf(Argument.mapOf(String.class, Object.class));
     private static final String SLASH = "/";
+    private static final String COMMA = ",";
+    private static final String DOT = "\\.";
+    private static final String DESC = "desc";
     private static final String DASH = "-";
     private static final String UNKNOWN = "*";
 
@@ -96,8 +101,11 @@ public final class PostgrestResponses {
     }
 
     /**
-     * Builds a page for a {@link PostgrestQuery} request. The page number is derived from the
-     * {@code Content-Range} offset and the requested limit; without a limit the page is unpaged.
+     * Builds a page for a {@link PostgrestQuery} request. The page keeps the query's own offset and limit,
+     * so {@link Page#nextPageable()} continues exactly where the query stopped, and its sort as far as the
+     * {@code order} value can be read back ({@code column.asc,other.desc}; PostgREST only modifiers such as
+     * {@code nullslast} are dropped). Without a limit the page is unpaged. The total comes from
+     * {@code Content-Range}.
      *
      * @param response response of {@link PostgrestRequests#findAll(String, PostgrestQuery)}
      * @param query    the query, or {@code null} when every row was requested
@@ -106,11 +114,38 @@ public final class PostgrestResponses {
      */
     public static <T> Page<T> page(HttpResponse<List<T>> response, @Nullable PostgrestQuery query) {
         List<T> items = items(response);
-        String contentRange = contentRange(response);
-        Pageable pageable = query != null && query.limit() != null && query.limit() > 0
-            ? Pageable.from(offset(contentRange) / query.limit(), query.limit())
-            : Pageable.unpaged();
-        return Page.of(items, pageable, total(contentRange, items.size()));
+        return Page.of(items, pageable(query), total(contentRange(response), items.size()));
+    }
+
+    private static Pageable pageable(@Nullable PostgrestQuery query) {
+        if (query == null) {
+            return Pageable.unpaged();
+        }
+        Sort sort = sort(query.order());
+        if (query.limit() == null || query.limit() <= 0) {
+            return Pageable.from(sort);
+        }
+        long offset = query.offset() == null ? 0 : query.offset();
+        return new OffsetPageable(offset, query.limit(), sort);
+    }
+
+    /**
+     * Reads a PostgREST {@code order} value back into a {@link Sort}: {@code col}, {@code col.asc} or
+     * {@code col.desc} per comma separated item; further modifiers are ignored.
+     */
+    private static Sort sort(@Nullable String order) {
+        if (order == null || order.isBlank()) {
+            return Sort.unsorted();
+        }
+        List<Sort.Order> orders = new ArrayList<>();
+        for (String item : order.split(COMMA)) {
+            String[] parts = item.trim().split(DOT);
+            if (!parts[0].isEmpty()) {
+                boolean descending = parts.length > 1 && DESC.equalsIgnoreCase(parts[1]);
+                orders.add(descending ? Sort.Order.desc(parts[0]) : Sort.Order.asc(parts[0]));
+            }
+        }
+        return Sort.of(orders);
     }
 
     /**
