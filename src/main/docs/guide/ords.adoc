@@ -25,14 +25,14 @@ For every data source the module creates one implementation of each contract:
 |===
 |Contract |ORDS implementation
 
-|api:datarest.core.repositories.RestCrudRepository[]
-|api:datarest.ords.OrdsRestCrudRepository[]
+|api:datarest.core.repositories.RestGenericRepository[]
+|api:datarest.ords.OrdsRestGenericRepository[]
 
-|api:datarest.core.repositories.ReactiveRestCrudRepository[]
-|api:datarest.ords.OrdsReactiveRestCrudRepository[]
+|api:datarest.core.repositories.ReactiveRestGenericRepository[]
+|api:datarest.ords.OrdsReactiveRestGenericRepository[]
 
-|api:datarest.core.repositories.ReactorRestCrudRepository[]
-|api:datarest.ords.OrdsReactorRestCrudRepository[]
+|api:datarest.core.repositories.ReactorRestGenericRepository[]
+|api:datarest.ords.OrdsReactorRestGenericRepository[]
 |===
 
 == How operations map to AutoREST
@@ -110,6 +110,15 @@ select client_id, client_secret from user_ords_clients where name = 'my-service'
 ----
 
 Tokens are issued by `POST /ords/{schema-alias}/oauth/token` with `grant_type=client_credentials` and the client id and secret as HTTP basic credentials. Micronaut Security can perform that exchange and attach the token to the data source's requests, as described in <<security>>.
+
+== Dates
+
+ORDS represents Oracle `DATE` columns as ISO 8601 timestamps, for example `1997-06-26T00:00:00Z`, and rejects a plain ISO date on writes. So that a `LocalDate` field works the same way as with other gateways, the module reads the table's https://docs.oracle.com/en/database/oracle/oracle-rest-data-services/[metadata catalog] once, at `/metadata-catalog/{table}/`, and translates its `DATE` columns:
+
+* on `save` and `update`, an ISO date such as `1997-06-26` is sent as `1997-06-26T00:00:00Z`;
+* on reads, a midnight timestamp such as `1997-06-26T00:00:00Z` is bound as `1997-06-26`.
+
+A `DATE` value carrying a time of day is left as a timestamp, so map such columns to `Instant` or `OffsetDateTime`. `TIMESTAMP` columns are never translated. The metadata catalog is subject to the same authorization as the table.
 
 == Limitations
 

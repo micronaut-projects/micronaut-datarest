@@ -19,12 +19,13 @@ import io.micronaut.core.annotation.NonNull;
 import io.micronaut.data.model.Page;
 import io.micronaut.data.model.Pageable;
 import io.micronaut.data.model.Sort;
-import io.micronaut.datarest.core.repositories.ReactiveRestCrudRepository;
+import io.micronaut.datarest.core.repositories.ReactiveRestGenericRepository;
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
 import io.micronaut.test.support.TestPropertyProvider;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import reactor.core.publisher.Mono;
+import java.time.LocalDate;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
@@ -44,18 +45,20 @@ class BookReactiveCrudTest implements TestPropertyProvider {
     }
 
     @Test
-    void bookCrud(ReactiveRestCrudRepository repository) {
+    void bookCrud(ReactiveRestGenericRepository repository) {
         String title = "Harry Potter and the Philosopher's Stone";
         String author = "J.K. Rowling";
         String table = "books";
         String idColumn = "id";
+        LocalDate published = LocalDate.of(1997, 6, 26);
         Page<Book> books = assertDoesNotThrow(() -> Mono.from(repository.findAll(table, Book.class)).block());
         assertEquals(0, books.getNumberOfElements());
-        Book book = assertDoesNotThrow(() -> Mono.from(repository.save(table, new BookSave(title, author, null), Book.class)).block());
+        Book book = assertDoesNotThrow(() -> Mono.from(repository.save(table, new BookSave(title, author, published), Book.class)).block());
         books = assertDoesNotThrow(() -> Mono.from(repository.findAll(table, Book.class)).block());
         assertEquals(1, books.getNumberOfElements());
         assertEquals(title, books.getContent().getFirst().title());
         assertEquals(author, books.getContent().getFirst().author());
+        assertEquals(published, books.getContent().getFirst().published());
 
         assertEquals(1, assertDoesNotThrow(() -> Mono.from(repository.count(table)).block()));
         assertTrue(assertDoesNotThrow(() -> Mono.from(repository.existsById(table, idColumn, book.id())).block()));
@@ -64,6 +67,7 @@ class BookReactiveCrudTest implements TestPropertyProvider {
         Book found = assertDoesNotThrow(() -> Mono.from(repository.findById(table, idColumn, book.id(), Book.class)).block());
         assertNotNull(found);
         assertEquals(title, found.title());
+        assertEquals(published, found.published());
         assertNull(assertDoesNotThrow(() -> Mono.from(repository.findById(table, idColumn, -1L, Book.class)).block()));
 
         String newTitle = "Harry Potter and the Chamber of Secrets";
@@ -71,6 +75,7 @@ class BookReactiveCrudTest implements TestPropertyProvider {
         assertNotNull(updated);
         assertEquals(newTitle, updated.title());
         assertEquals(author, updated.author());
+        assertEquals(published, updated.published());
         assertNull(assertDoesNotThrow(() -> Mono.from(repository.update(table, idColumn, -1L, Map.of("title", newTitle), Book.class)).block()));
 
         Book second = assertDoesNotThrow(() -> Mono.from(repository.save(table, new BookSave("Dune", "Frank Herbert", null), Book.class)).block());

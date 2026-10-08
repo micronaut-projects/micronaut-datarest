@@ -13,25 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.micronaut.datarest.core.conf;
-
-import io.micronaut.core.naming.Named;
-import io.micronaut.datarest.core.Dialect;
-
-import java.net.URL;
-
 /**
- * Configuration of a REST data source.
+ * Repositories related classes for Micronaut Data REST.
  *
  * @author Sergio del Amo
  * @since 1.0.0
  */
-public interface RestDataSourceConfiguration extends Named {
+@NullMarked
+package io.micronaut.datarest.postgrest;
 
-    /**
-     * @return base URL of the REST data source
-     */
-    URL getUrl();
-
-    Dialect getDialect();
-}
+import org.jspecify.annotations.NullMarked;

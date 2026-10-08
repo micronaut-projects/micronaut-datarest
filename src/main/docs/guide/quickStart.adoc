@@ -20,9 +20,9 @@ restdatasources:
 For every data source, Micronaut creates:
 
 * an api:datarest.core.clients.RestDataSourceClient[] bean holding an HTTP client pointing at the base URL,
-* an api:datarest.core.repositories.RestCrudRepository[] bean,
-* an api:datarest.core.repositories.ReactiveRestCrudRepository[] bean,
-* an api:datarest.core.repositories.ReactorRestCrudRepository[] bean.
+* an api:datarest.core.repositories.RestGenericRepository[] bean,
+* an api:datarest.core.repositories.ReactiveRestGenericRepository[] bean,
+* an api:datarest.core.repositories.ReactorRestGenericRepository[] bean.
 
 Inject a repository and name the table you want to work with:
 
@@ -30,9 +30,9 @@ Inject a repository and name the table you want to work with:
 ----
 @Singleton
 class BookService {
-    private final RestCrudRepository repository;
+    private final RestGenericRepository repository;
 
-    BookService(RestCrudRepository repository) {
+    BookService(RestGenericRepository repository) {
         this.repository = repository;
     }
 

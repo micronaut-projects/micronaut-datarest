@@ -23,14 +23,14 @@ For every data source the module creates one implementation of each contract:
 |===
 |Contract |PostgREST implementation
 
-|api:datarest.core.repositories.RestCrudRepository[]
-|api:datarest.postgresql.PostgreSQLRestCrudRepository[]
+|api:datarest.core.repositories.RestGenericRepository[]
+|api:datarest.postgresql.PostgreSQLRestGenericRepository[]
 
-|api:datarest.core.repositories.ReactiveRestCrudRepository[]
-|api:datarest.postgresql.PostgreSQLReactiveRestCrudRepository[]
+|api:datarest.core.repositories.ReactiveRestGenericRepository[]
+|api:datarest.postgresql.PostgreSQLReactiveRestGenericRepository[]
 
-|api:datarest.core.repositories.ReactorRestCrudRepository[]
-|api:datarest.postgresql.PostgreSQLReactorRestCrudRepository[]
+|api:datarest.core.repositories.ReactorRestGenericRepository[]
+|api:datarest.postgresql.PostgreSQLReactorRestGenericRepository[]
 |===
 
 Inject the contract to stay gateway agnostic, or the implementation to access the PostgREST specific <<postgresql-queries,query methods>>.

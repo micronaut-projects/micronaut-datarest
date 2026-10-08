@@ -19,11 +19,12 @@ import io.micronaut.core.annotation.NonNull;
 import io.micronaut.data.model.Page;
 import io.micronaut.data.model.Pageable;
 import io.micronaut.data.model.Sort;
-import io.micronaut.datarest.core.repositories.ReactorRestCrudRepository;
+import io.micronaut.datarest.core.repositories.ReactorRestGenericRepository;
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
 import io.micronaut.test.support.TestPropertyProvider;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
+import java.time.LocalDate;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
@@ -43,18 +44,20 @@ class BookReactorCrudTest implements TestPropertyProvider {
     }
 
     @Test
-    void bookCrud(ReactorRestCrudRepository repository) {
+    void bookCrud(ReactorRestGenericRepository repository) {
         String title = "Harry Potter and the Philosopher's Stone";
         String author = "J.K. Rowling";
         String table = "books";
         String idColumn = "id";
+        LocalDate published = LocalDate.of(1997, 6, 26);
         Page<Book> books = assertDoesNotThrow(() -> repository.findAll(table, Book.class).block());
         assertEquals(0, books.getNumberOfElements());
-        Book book = assertDoesNotThrow(() -> repository.save(table, new BookSave(title, author, null), Book.class).block());
+        Book book = assertDoesNotThrow(() -> repository.save(table, new BookSave(title, author, published), Book.class).block());
         books = assertDoesNotThrow(() -> repository.findAll(table, Book.class).block());
         assertEquals(1, books.getNumberOfElements());
         assertEquals(title, books.getContent().getFirst().title());
         assertEquals(author, books.getContent().getFirst().author());
+        assertEquals(published, books.getContent().getFirst().published());
 
         assertEquals(1, assertDoesNotThrow(() -> repository.count(table).block()));
         assertTrue(assertDoesNotThrow(() -> repository.existsById(table, idColumn, book.id()).block()));
@@ -63,6 +66,7 @@ class BookReactorCrudTest implements TestPropertyProvider {
         Book found = assertDoesNotThrow(() -> repository.findById(table, idColumn, book.id(), Book.class).block());
         assertNotNull(found);
         assertEquals(title, found.title());
+        assertEquals(published, found.published());
         assertNull(assertDoesNotThrow(() -> repository.findById(table, idColumn, -1L, Book.class).block()));
 
         String newTitle = "Harry Potter and the Chamber of Secrets";
@@ -70,6 +74,7 @@ class BookReactorCrudTest implements TestPropertyProvider {
         assertNotNull(updated);
         assertEquals(newTitle, updated.title());
         assertEquals(author, updated.author());
+        assertEquals(published, updated.published());
         assertNull(assertDoesNotThrow(() -> repository.update(table, idColumn, -1L, Map.of("title", newTitle), Book.class).block()));
 
         Book second = assertDoesNotThrow(() -> repository.save(table, new BookSave("Dune", "Frank Herbert", null), Book.class).block());

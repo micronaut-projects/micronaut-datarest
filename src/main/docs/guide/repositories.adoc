@@ -1,4 +1,4 @@
-The three repository contracts expose the same operations and differ only in their return types. api:datarest.core.repositories.RestCrudRepository[] returns values directly and suits servlet or virtual-thread applications. api:datarest.core.repositories.ReactiveRestCrudRepository[] returns a Reactive Streams `Publisher` that emits at most one item, for use with any reactive library. api:datarest.core.repositories.ReactorRestCrudRepository[] returns a Project Reactor `Mono`.
+The three repository contracts expose the same operations and differ only in their return types. api:datarest.core.repositories.RestGenericRepository[] returns values directly and suits servlet or virtual-thread applications. api:datarest.core.repositories.ReactiveRestGenericRepository[] returns a Reactive Streams `Publisher` that emits at most one item, for use with any reactive library. api:datarest.core.repositories.ReactorRestGenericRepository[] returns a Project Reactor `Mono`.
 
 [cols="2,3,3,3"]
 |===

@@ -11,6 +11,8 @@ import java.sql.Statement;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
+
+import io.micronaut.datarest.core.Dialect;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.Network;
 import org.testcontainers.containers.wait.strategy.Wait;
@@ -121,7 +123,8 @@ public class Ords {
                 throw new IllegalStateException("ORDS fixture setup failed", e);
             }
         }
-        return Map.of("restdatasources." + nameQualifier + ".url", url);
+        return Map.of("restdatasources." + nameQualifier + ".dialect", Dialect.ORDS.toString(),
+            "restdatasources." + nameQualifier + ".url", url);
     }
 
     /**

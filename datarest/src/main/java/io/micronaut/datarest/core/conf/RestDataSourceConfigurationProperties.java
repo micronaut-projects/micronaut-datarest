@@ -17,6 +17,7 @@ package io.micronaut.datarest.core.conf;
 
 import io.micronaut.context.annotation.EachProperty;
 import io.micronaut.context.annotation.Parameter;
+import io.micronaut.datarest.core.Dialect;
 
 import java.net.URL;
 
@@ -30,6 +31,7 @@ import java.net.URL;
 final class RestDataSourceConfigurationProperties implements RestDataSourceConfiguration {
     private final String name;
     private URL url;
+    private Dialect dialect;
 
     RestDataSourceConfigurationProperties(@Parameter String name) {
         this.name = name;
@@ -50,5 +52,14 @@ final class RestDataSourceConfigurationProperties implements RestDataSourceConfi
      */
     public void setUrl(URL url) {
         this.url = url;
+    }
+
+    @Override
+    public Dialect getDialect() {
+        return dialect;
+    }
+
+    public void setDialect(Dialect dialect) {
+        this.dialect = dialect;
     }
 }

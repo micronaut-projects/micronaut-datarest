@@ -24,6 +24,6 @@ import java.time.LocalDate;
 public record BookSave(
     String title,
     @Nullable String author,
-    @Nullable LocalDate date
+    @Nullable LocalDate published
 ) {
 }

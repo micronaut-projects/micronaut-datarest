@@ -1,1 +1,1 @@
-io.micronaut.datarest.postgresql.PostgreSQLRestDatasourceProvider
+io.micronaut.datarest.postgrest.PostgreSQLRestDatasourceProvider

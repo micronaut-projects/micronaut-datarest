@@ -24,6 +24,6 @@ public record Book(
     Long id,
     String title,
     String author,
-    LocalDate date
+    LocalDate published
 ) {
 }

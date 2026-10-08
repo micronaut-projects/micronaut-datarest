@@ -26,4 +26,5 @@ micronautBuild {
     importMicronautCatalog("micronaut-sql")
     importMicronautCatalog("micronaut-data")
     importMicronautCatalog("micronaut-reactor")
+    importMicronautCatalog("micronaut-sourcegen")
 }

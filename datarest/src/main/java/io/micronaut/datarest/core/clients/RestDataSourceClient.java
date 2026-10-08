@@ -17,6 +17,7 @@ package io.micronaut.datarest.core.clients;
 
 import io.micronaut.context.BeanContext;
 import io.micronaut.context.annotation.EachBean;
+import io.micronaut.datarest.core.Dialect;
 import io.micronaut.datarest.core.conf.RestDataSourceConfiguration;
 import io.micronaut.http.HttpVersion;
 import io.micronaut.http.client.HttpClient;
@@ -48,6 +49,7 @@ public final class RestDataSourceClient {
     private final HttpClient httpClient;
     private final URL url;
     private final String serviceId;
+    private Dialect dialect;
 
     /**
      * @param restDataSourceConfiguration configuration of the REST data source
@@ -58,12 +60,17 @@ public final class RestDataSourceClient {
     public RestDataSourceClient(RestDataSourceConfiguration restDataSourceConfiguration,
                                 HttpClientRegistry<?> registry,
                                 BeanContext beanContext) {
+        this.dialect = restDataSourceConfiguration.getDialect();
         this.url = RestDataSourceUrls.require(restDataSourceConfiguration);
         this.serviceId = serviceId(restDataSourceConfiguration.getName());
         HttpVersionSelection version = beanContext.findBean(HttpClientConfiguration.class, Qualifiers.byName(serviceId))
             .map(HttpVersionSelection::forClientConfiguration)
             .orElseGet(() -> HttpVersionSelection.forLegacyVersion(HttpVersion.HTTP_1_1));
         this.httpClient = registry.getClient(version, serviceId, null);
+    }
+
+    public Dialect getDialect() {
+        return dialect;
     }
 
     /**
