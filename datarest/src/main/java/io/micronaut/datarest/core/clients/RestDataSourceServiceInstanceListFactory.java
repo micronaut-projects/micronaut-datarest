@@ -48,7 +48,7 @@ final class RestDataSourceServiceInstanceListFactory {
     @EachBean(RestDataSourceConfiguration.class)
     ServiceInstanceList serviceInstanceList(RestDataSourceConfiguration configuration) {
         try {
-            URI uri = configuration.getUrl().toURI();
+            URI uri = RestDataSourceUrls.require(configuration).toURI();
             return new StaticServiceInstanceList(RestDataSourceClient.serviceId(configuration.getName()),
                 List.of(uri), contextPath(uri));
         } catch (URISyntaxException e) {

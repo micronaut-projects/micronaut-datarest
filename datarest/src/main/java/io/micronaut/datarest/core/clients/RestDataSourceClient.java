@@ -58,7 +58,7 @@ public final class RestDataSourceClient {
     public RestDataSourceClient(RestDataSourceConfiguration restDataSourceConfiguration,
                                 HttpClientRegistry<?> registry,
                                 BeanContext beanContext) {
-        this.url = restDataSourceConfiguration.getUrl();
+        this.url = RestDataSourceUrls.require(restDataSourceConfiguration);
         this.serviceId = serviceId(restDataSourceConfiguration.getName());
         HttpVersionSelection version = beanContext.findBean(HttpClientConfiguration.class, Qualifiers.byName(serviceId))
             .map(HttpVersionSelection::forClientConfiguration)
